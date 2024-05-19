@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: booking-configmap
+#  namespace: backend
+data:
+  SERVICE_PORT: "8081"
+  GRPC_PORT: "8001"

@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: booking
+#  namespace: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: booking
+  template:
+    metadata:
+      labels:
+        app: booking
+        sidecar.istio.io/inject: "true"
+    spec:
+      containers:
+        - name: booking
+          image: devopszms2024/zms-devops-booking-service:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8081
+          envFrom:
+            - secretRef:
+                name: mongo-secret
+          env:
+            - name: DB_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: mongo-configmap
+                  key: db-host
+            - name: DB_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: mongo-configmap
+                  key: db-port
+            - name: SERVICE_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: booking-configmap
+                  key: SERVICE_PORT
+            - name: GRPC_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: booking-configmap
+                  key: GRPC_PORT
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: booking
+#  namespace: backend
+spec:
+  selector:
+    app: booking
+  ports:
+    - protocol: TCP
+      name: http
+      port: 80
+      targetPort: 8081
+    - protocol: TCP
+      name: grpc
+      port: 8001
+      targetPort: 8001
