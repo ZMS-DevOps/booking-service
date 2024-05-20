@@ -18,5 +18,6 @@ func NewConfig() *Config {
 		BookingDBPort:     os.Getenv("DB_PORT"),
 		BookingDBUsername: os.Getenv("MONGO_INITDB_ROOT_USERNAME"),
 		BookingDBPassword: os.Getenv("MONGO_INITDB_ROOT_PASSWORD"),
+		GrpcPort:          os.Getenv("GRPC_PORT"),
 	}
 }

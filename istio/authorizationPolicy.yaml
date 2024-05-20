@@ -7,11 +7,12 @@ spec:
     matchLabels:
        app: booking
   rules:
+#    - {}
     - to:
         - operation:
             methods: [ "GET", "PUT", "POST", "DELETE"]
 #            methods: [ "GET"]
-            paths: [ "/booking/health", "/booking/unavailability*", "/booking/unavailability/**", "/booking/unavailability/add", "/booking/unavailability/remove" ]
+            paths: [ "/booking.BookingService/*", "/booking/health", "/booking/unavailability*", "/booking/unavailability/**", "/booking/unavailability/add", "/booking/unavailability/remove" ]
 #    - to:      todo
 #        - operation:
 #            methods: [ "GET", "PUT", "POST", "DELETE" ]

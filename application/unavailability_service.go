@@ -22,7 +22,8 @@ func (service *UnavailabilityService) AddUnavailability(accommodationId primitiv
 		return err
 	}
 
-	if &unavailability != nil {
+	if unavailability != nil {
+		fmt.Printf(unavailability.AccommodationId.Hex())
 		return fmt.Errorf("unavailability already exists for accommodation ID: %s", accommodationId.Hex())
 	}
 
@@ -72,4 +73,12 @@ func (service *UnavailabilityService) RemoveUnavailabilityPeriod(unavailabilityI
 // GetAll retrieves all unavailability records.
 func (service *UnavailabilityService) GetAll() ([]*domain.Unavailability, error) {
 	return service.store.GetAll()
+}
+
+func (service *UnavailabilityService) Get(id primitive.ObjectID) (*domain.Unavailability, error) {
+	return service.store.Get(id)
+}
+
+func (service *UnavailabilityService) GetByAccommodationId(id primitive.ObjectID) (*domain.Unavailability, error) {
+	return service.store.GetByAccommodationId(id)
 }
