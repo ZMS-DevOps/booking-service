@@ -8,10 +8,10 @@ import (
 )
 
 type ManageUnavailabilityPeriodDto struct {
-	UnavailabilityId primitive.ObjectID `json:"unavailability_id" validate:"required"`
-	Start            time.Time          `json:"start" validate:"required"`
-	End              time.Time          `json:"end" validate:"required,gtefield=Start"`
-	Reason           *string            `json:"reason" validate:"omitempty,oneof=Reserved OwnerSet"`
+	AccommodationId primitive.ObjectID `json:"accommodation_id" validate:"required"`
+	Start           time.Time          `json:"start" validate:"required"`
+	End             time.Time          `json:"end" validate:"required,gtefield=Start"`
+	Reason          *string            `json:"reason" validate:"omitempty,oneof=Reserved OwnerSet"`
 }
 
 func ValidateManageUnavailabilityPeriodDto(dto ManageUnavailabilityPeriodDto) error {

@@ -1,4 +1,4 @@
-name: "Merge - Booking service"
+name: "Merge - Booking booking-service"
 
 on:
   pull_request:
@@ -24,7 +24,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-         go-version-file: 'booking-service/go.mod'
+         go-version-file: 'booking-booking-service/go.mod'
          check-latest: true
          cache-dependency-path: |
            booking-service/go.mod
@@ -35,20 +35,20 @@ jobs:
          path: |
            ~/.cache/go-build
            ~/go/pkg/mod
-         key: ${{ runner.os }}-go-${{ hashFiles('**/booking-service/go.sum') }}
+         key: ${{ runner.os }}-go-${{ hashFiles('**/booking-booking-service/go.sum') }}
          restore-keys: |
            ${{ runner.os }}-go-
  
       - name: Install dependencies
-        working-directory: booking-service
+        working-directory: booking-booking-service
         run: go get .
  
       - name: Build
-        working-directory: booking-service
+        working-directory: booking-booking-service
         run: go build -v ./...
  
       - name: Test
-        working-directory: booking-service
+        working-directory: booking-booking-service
         run: go test -v ./...
   
   sonar-cloud:
@@ -63,7 +63,7 @@ jobs:
       - name: SonarCloud Scan
         uses: sonarsource/sonarcloud-github-action@master
         with:
-          projectBaseDir: booking-service
+          projectBaseDir: booking-booking-service
           args: >
             -Dsonar.organization=zms-devops
             -Dsonar.projectKey=ZMS-DevOps_booking-service
@@ -108,7 +108,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-         go-version-file: 'booking-service/go.mod'
+         go-version-file: 'booking-booking-service/go.mod'
          check-latest: true
          cache-dependency-path: |
            booking-service/go.mod
@@ -119,7 +119,7 @@ jobs:
          path: |
            ~/.cache/go-build
            ~/go/pkg/mod
-         key: ${{ runner.os }}-go-${{ hashFiles('**/booking-service/go.sum') }}
+         key: ${{ runner.os }}-go-${{ hashFiles('**/booking-booking-service/go.sum') }}
          restore-keys: |
            ${{ runner.os }}-go-
 
@@ -141,8 +141,8 @@ jobs:
         id: push
         uses: docker/build-push-action@v5
         with:
-          context: ./booking-service
-          file: ./booking-service/Dockerfile
+          context: ./booking-booking-service
+          file: ./booking-booking-service/Dockerfile
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |

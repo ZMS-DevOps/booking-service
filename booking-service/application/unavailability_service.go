@@ -41,30 +41,26 @@ func (service *UnavailabilityService) AddUnavailability(accommodationId primitiv
 	return nil
 }
 
-func (service *UnavailabilityService) AddUnavailabilityPeriod(unavailabilityId primitive.ObjectID, period *domain.UnavailabilityPeriod) error {
-	_, err := service.store.Get(unavailabilityId)
+func (service *UnavailabilityService) AddUnavailabilityPeriod(accommodationId primitive.ObjectID, period *domain.UnavailabilityPeriod) error {
+	var unavailability, err = service.store.GetByAccommodationId(accommodationId)
 	if err != nil {
 		return err
 	}
-
-	var periods, _ = service.store.GetUnavailabilityPeriods(unavailabilityId)
 	period.Id = primitive.NewObjectID()
-	if err := service.store.UpdateUnavailabilityPeriods(unavailabilityId, insertPeriod(period, periods)); err != nil {
+	if err := service.store.UpdateUnavailabilityPeriods(unavailability.Id, insertPeriod(period, unavailability.UnavailabilityPeriods)); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (service *UnavailabilityService) RemoveUnavailabilityPeriod(unavailabilityId primitive.ObjectID, period *domain.UnavailabilityPeriod) interface{} {
-	_, err := service.store.Get(unavailabilityId)
+func (service *UnavailabilityService) RemoveUnavailabilityPeriod(accommodationId primitive.ObjectID, period *domain.UnavailabilityPeriod) interface{} {
+	unavailability, err := service.store.GetByAccommodationId(accommodationId)
 	if err != nil {
 		return err
 	}
-
-	var periods, _ = service.store.GetUnavailabilityPeriods(unavailabilityId)
 	period.Id = primitive.NewObjectID()
-	if err := service.store.UpdateUnavailabilityPeriods(unavailabilityId, removePeriod(*period, periods)); err != nil {
+	if err := service.store.UpdateUnavailabilityPeriods(unavailability.Id, removePeriod(*period, unavailability.UnavailabilityPeriods)); err != nil {
 		return err
 	}
 

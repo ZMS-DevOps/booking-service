@@ -18,7 +18,7 @@ import (
 // Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
-// BookingServiceClient is the client API for BookingService service.
+// BookingServiceClient is the client API for BookingService booking-service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type BookingServiceClient interface {
@@ -52,7 +52,7 @@ func (c *bookingServiceClient) FilterAvailableAccommodation(ctx context.Context,
 	return out, nil
 }
 
-// BookingServiceServer is the server API for BookingService service.
+// BookingServiceServer is the server API for BookingService booking-service.
 // All implementations must embed UnimplementedBookingServiceServer
 // for forward compatibility
 type BookingServiceServer interface {
@@ -73,7 +73,7 @@ func (UnimplementedBookingServiceServer) FilterAvailableAccommodation(context.Co
 }
 func (UnimplementedBookingServiceServer) mustEmbedUnimplementedBookingServiceServer() {}
 
-// UnsafeBookingServiceServer may be embedded to opt out of forward compatibility for this service.
+// UnsafeBookingServiceServer may be embedded to opt out of forward compatibility for this booking-service.
 // Use of this interface is not recommended, as added methods to BookingServiceServer will
 // result in compilation errors.
 type UnsafeBookingServiceServer interface {
@@ -120,7 +120,7 @@ func _BookingService_FilterAvailableAccommodation_Handler(srv interface{}, ctx c
 	return interceptor(ctx, in, info, handler)
 }
 
-// BookingService_ServiceDesc is the grpc.ServiceDesc for BookingService service.
+// BookingService_ServiceDesc is the grpc.ServiceDesc for BookingService booking-service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var BookingService_ServiceDesc = grpc.ServiceDesc{
