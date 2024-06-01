@@ -2,11 +2,11 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: mongodb-service
-#  namespace: backend
+  name: mongodb-booking
+  namespace: backend
 spec:
   selector:
-    app: mongodb
+    app: mongodb-booking
   ports:
     - protocol: TCP
       port: 27017
@@ -16,20 +16,20 @@ spec:
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: mongodb
-#  namespace: backend
+  name: mongodb-booking
+  namespace: backend
 spec:
-  serviceName: mongodb-service
+  serviceName: mongodb-booking
   selector:
     matchLabels:
-      app: mongodb
+      app: mongodb-booking
   template:
     metadata:
       labels:
-        app: mongodb
+        app: mongodb-booking
     spec:
       containers:
-        - name: mongodb
+        - name: mongodb-booking
           image: mongo
           ports:
             - containerPort: 27017
@@ -37,27 +37,27 @@ spec:
             - name: MONGO_INITDB_ROOT_USERNAME
               valueFrom:
                 secretKeyRef:
-                  name: mongo-secret
+                  name: mongodb-booking-secret
                   key: MONGO_INITDB_ROOT_USERNAME
             - name: MONGO_INITDB_ROOT_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: mongo-secret
+                  name: mongodb-booking-secret
                   key: MONGO_INITDB_ROOT_PASSWORD
           volumeMounts:
-            - name: mongo-storage
+            - name: mongodb-booking-storage
               mountPath: /data/db
       volumes:
-        - name: mongo-storage
+        - name: mongodb-booking-storage
           persistentVolumeClaim:
-            claimName: mongo-pvc
+            claimName: mongodb-booking-pvc
 
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: mongo-pvc
-#  namespace: backend
+  name: mongodb-booking-pvc
+  namespace: backend
 spec:
   accessModes:
     - ReadWriteOnce
@@ -69,8 +69,8 @@ spec:
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: mongo-pv
-#  namespace: backend
+  name: mongodb-booking-pv
+  namespace: backend
 spec:
   capacity:
     storage: 1Gi

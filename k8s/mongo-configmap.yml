@@ -1,8 +1,8 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: mongo-configmap
-#  namespace: backend
+  name: mongodb-booking-configmap
+  namespace: backend
 data:
-  db-host: "mongodb-service"
-  db-port: "27017"
+  DB_HOST: "mongodb-booking"
+  DB_PORT: "27017"

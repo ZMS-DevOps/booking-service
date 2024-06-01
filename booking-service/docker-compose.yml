@@ -5,7 +5,7 @@ services:
     image: hotel_service
     container_name: hotel_service
     build:
-      context: .
+      context: ..
       dockerfile: Dockerfile
     restart: on-failure
     environment:

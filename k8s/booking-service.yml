@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: booking
-#  namespace: backend
+  namespace: backend
 spec:
   replicas: 1
   selector:
@@ -19,45 +19,28 @@ spec:
           image: devopszms2024/zms-devops-booking-service:latest
           imagePullPolicy: Always
           ports:
-            - containerPort: 8081
+            - containerPort: 8086
           envFrom:
             - secretRef:
-                name: mongo-secret
-          env:
-            - name: DB_HOST
-              valueFrom:
-                configMapKeyRef:
-                  name: mongo-configmap
-                  key: db-host
-            - name: DB_PORT
-              valueFrom:
-                configMapKeyRef:
-                  name: mongo-configmap
-                  key: db-port
-            - name: SERVICE_PORT
-              valueFrom:
-                configMapKeyRef:
-                  name: booking-configmap
-                  key: SERVICE_PORT
-            - name: GRPC_PORT
-              valueFrom:
-                configMapKeyRef:
-                  name: booking-configmap
-                  key: GRPC_PORT
+                name: mongodb-booking-secret
+            - configMapRef:
+                name: booking-configmap
+            - configMapRef:
+                name: mongodb-booking-configmap
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: booking
-#  namespace: backend
+  namespace: backend
 spec:
   selector:
     app: booking
   ports:
     - protocol: TCP
       name: http
-      port: 80
-      targetPort: 8081
+      port: 8086
+      targetPort: 8086
     - protocol: TCP
       name: grpc
       port: 8001

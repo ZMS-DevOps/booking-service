@@ -87,8 +87,8 @@ kubectl -n backend describe ingress demo-ingress
 
 Apply za ceo ili vise direktorijuma
 ```shell
-kubectl apply -R -f k8s
-kubectl apply -R -f istio
+kubectl -n backend  apply -R -f k8s
+kubectl -n backend  apply -R -f istio
 ```
 
 Ponisti prethodnu verziju i apply novu 
@@ -96,7 +96,7 @@ Ponisti prethodnu verziju i apply novu
 kubectl replace --force -f ingress.yml
 kubectl replace --force -f istio/authorizationPolicy.yaml
 kubectl replace --force -f k8s/booking-service.yml
-kubectl replace --force -f k8s/booking-configmap.yml
+kubectl -n backend  replace --force -f k8s/booking-configmap.yml
 ```
 
 Keycloak
@@ -115,3 +115,4 @@ Create hotel-user , hotel-admin (password: test)
 
 docker build -t devopszms2024/zms-devops-booking-service .
 docker push devopszms2024/zms-devops-booking-service
+kubectl replace --force -f ../k8s/
