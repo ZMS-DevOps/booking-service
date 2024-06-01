@@ -1,0 +1,26 @@
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: booking
+spec:	
+  selector:
+    matchLabels:
+       app: booking
+  rules:
+#    - {}
+    - to:
+        - operation:
+            methods: [ "GET", "PUT", "POST", "DELETE"]
+#            methods: [ "GET"]
+            paths: [ "/booking.BookingService/*", "/booking/health", "/booking/unavailability*", "/booking/unavailability/**", "/booking/unavailability/add", "/booking/unavailability/remove" ]
+#    - to:      todo
+#        - operation:
+#            methods: [ "GET", "PUT", "POST", "DELETE" ]
+#            paths: [ "/booking/unavailability*", "/booking/unavailability/**" ]
+#      from:
+#        - source:
+#              requestPrincipals: [ "*" ]
+#      when:
+#        - key: request.auth.claims[realm_access][roles]
+#          values: [ "admin" ]
+
