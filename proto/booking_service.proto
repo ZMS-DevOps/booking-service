@@ -7,6 +7,7 @@ package booking;
 
 service BookingService{
   rpc AddUnavailability(AddUnavailabilityRequest) returns(AddUnavailabilityResponse) {}
+  rpc FilterAvailableAccommodation(FilterAvailableAccommodationRequest) returns(FilterAvailableAccommodationResponse) {}
 }
 
 message AddUnavailabilityRequest {
@@ -14,4 +15,14 @@ message AddUnavailabilityRequest {
 }
 
 message AddUnavailabilityResponse {
+}
+
+message FilterAvailableAccommodationRequest {
+  repeated string accommodationIds = 1;
+  string startDate = 2;
+  string endDate = 3;
+}
+
+message FilterAvailableAccommodationResponse {
+  repeated string accommodationIds = 1;
 }

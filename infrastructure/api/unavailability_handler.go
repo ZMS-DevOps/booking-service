@@ -56,7 +56,7 @@ func (handler *UnavailabilityHandler) AddPeriod(w http.ResponseWriter, r *http.R
 
 	newUnavailabilityPeriod := dto.MapUnavailabilityPeriod(&manageUnavailabilityPeriodDto)
 
-	if err := handler.service.AddUnavailabilityPeriod(manageUnavailabilityPeriodDto.UnavailabilityId, newUnavailabilityPeriod); err != nil {
+	if err := handler.service.AddUnavailabilityPeriod(manageUnavailabilityPeriodDto.AccommodationId, newUnavailabilityPeriod); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -78,7 +78,7 @@ func (handler *UnavailabilityHandler) DeletePeriod(w http.ResponseWriter, r *htt
 
 	newUnavailabilityPeriod := dto.MapUnavailabilityPeriod(&manageUnavailabilityPeriodDto)
 
-	if err := handler.service.RemoveUnavailabilityPeriod(manageUnavailabilityPeriodDto.UnavailabilityId, newUnavailabilityPeriod); err != nil {
+	if err := handler.service.RemoveUnavailabilityPeriod(manageUnavailabilityPeriodDto.AccommodationId, newUnavailabilityPeriod); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}

@@ -23,6 +23,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type BookingServiceClient interface {
 	AddUnavailability(ctx context.Context, in *AddUnavailabilityRequest, opts ...grpc.CallOption) (*AddUnavailabilityResponse, error)
+	FilterAvailableAccommodation(ctx context.Context, in *FilterAvailableAccommodationRequest, opts ...grpc.CallOption) (*FilterAvailableAccommodationResponse, error)
 }
 
 type bookingServiceClient struct {
@@ -42,11 +43,21 @@ func (c *bookingServiceClient) AddUnavailability(ctx context.Context, in *AddUna
 	return out, nil
 }
 
+func (c *bookingServiceClient) FilterAvailableAccommodation(ctx context.Context, in *FilterAvailableAccommodationRequest, opts ...grpc.CallOption) (*FilterAvailableAccommodationResponse, error) {
+	out := new(FilterAvailableAccommodationResponse)
+	err := c.cc.Invoke(ctx, "/booking.BookingService/FilterAvailableAccommodation", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // BookingServiceServer is the server API for BookingService service.
 // All implementations must embed UnimplementedBookingServiceServer
 // for forward compatibility
 type BookingServiceServer interface {
 	AddUnavailability(context.Context, *AddUnavailabilityRequest) (*AddUnavailabilityResponse, error)
+	FilterAvailableAccommodation(context.Context, *FilterAvailableAccommodationRequest) (*FilterAvailableAccommodationResponse, error)
 	mustEmbedUnimplementedBookingServiceServer()
 }
 
@@ -56,6 +67,9 @@ type UnimplementedBookingServiceServer struct {
 
 func (UnimplementedBookingServiceServer) AddUnavailability(context.Context, *AddUnavailabilityRequest) (*AddUnavailabilityResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddUnavailability not implemented")
+}
+func (UnimplementedBookingServiceServer) FilterAvailableAccommodation(context.Context, *FilterAvailableAccommodationRequest) (*FilterAvailableAccommodationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method FilterAvailableAccommodation not implemented")
 }
 func (UnimplementedBookingServiceServer) mustEmbedUnimplementedBookingServiceServer() {}
 
@@ -88,6 +102,24 @@ func _BookingService_AddUnavailability_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
+func _BookingService_FilterAvailableAccommodation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FilterAvailableAccommodationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BookingServiceServer).FilterAvailableAccommodation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/booking.BookingService/FilterAvailableAccommodation",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BookingServiceServer).FilterAvailableAccommodation(ctx, req.(*FilterAvailableAccommodationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // BookingService_ServiceDesc is the grpc.ServiceDesc for BookingService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -98,6 +130,10 @@ var BookingService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AddUnavailability",
 			Handler:    _BookingService_AddUnavailability_Handler,
+		},
+		{
+			MethodName: "FilterAvailableAccommodation",
+			Handler:    _BookingService_FilterAvailableAccommodation_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

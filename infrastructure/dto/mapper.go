@@ -27,3 +27,33 @@ func mapReason(reason *string) (*domain.UnavailabilityReason, error) {
 	}
 	return &unavailabilityReason, nil
 }
+
+func MapRegistrationRequest(dto AddReservationRequestDto) *domain.ReservationRequest {
+	return &domain.ReservationRequest{
+		AccommodationId: dto.AccommodationId,
+		UserId:          dto.UserId,
+		Start:           dto.Start,
+		End:             dto.End,
+		NumberOfGuests:  dto.NumberOfGuests,
+		PriceTotal:      dto.PriceTotal,
+	}
+}
+
+func MapReservationRequestResponse(requests []*domain.ReservationRequest) []*ReservationRequestResponse {
+	var response []*ReservationRequestResponse
+
+	for i := range requests {
+		reservationRequest := ReservationRequestResponse{
+			Id:              requests[i].Id,
+			AccommodationId: requests[i].AccommodationId,
+			UserId:          requests[i].UserId,
+			Start:           requests[i].Start,
+			End:             requests[i].End,
+			NumberOfGuests:  requests[i].NumberOfGuests,
+			PriceTotal:      requests[i].PriceTotal,
+			Status:          requests[i].Status,
+		}
+		response = append(response, &reservationRequest)
+	}
+	return response
+}
