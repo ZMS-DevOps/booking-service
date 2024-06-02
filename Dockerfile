@@ -14,7 +14,7 @@ COPY go.mod ./go.sum ./
 RUN go mod download
 
 # Copy everything from the current directory to the Working Directory inside the container
-COPY ../.. .
+COPY .. .
 
 # Build the Go app
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
