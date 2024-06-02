@@ -1,10 +1,10 @@
-name: "Pull Request - Booking booking-service"
+name: "Pull Request - Booking service"
 on:
  workflow_dispatch:
  pull_request:
    types: [opened, reopened, synchronize]
    paths:
-     - 'booking-booking-service/**'
+     - 'booking-service/**'
      - '.github/workflows/**'
 
 concurrency:
@@ -22,7 +22,7 @@ jobs:
      - name: Setup Go
        uses: actions/setup-go@v5
        with:
-        go-version-file: 'booking-booking-service/go.mod'
+        go-version-file: 'booking-service/go.mod'
         check-latest: true
         cache-dependency-path: |
           booking-service/go.mod
@@ -32,19 +32,19 @@ jobs:
         path: |
           ~/.cache/go-build
           ~/go/pkg/mod
-        key: ${{ runner.os }}-go-${{ hashFiles('**/booking-booking-service/go.sum') }}
+        key: ${{ runner.os }}-go-${{ hashFiles('**/booking-service/go.sum') }}
         restore-keys: |
           ${{ runner.os }}-go-
 
      - name: Install dependencies
-       working-directory: booking-booking-service
+       working-directory: booking-service
        run: go get .
 
      - name: Build
-       working-directory: booking-booking-service
+       working-directory: booking-service
        run: go build -v ./...
 
      - name: Test
-       working-directory: booking-booking-service
+       working-directory: booking-service
        run: go test -v ./...
        
