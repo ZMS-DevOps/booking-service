@@ -38,7 +38,7 @@ func (server *Server) Start() {
 	unavailabilityStore := server.initUnavailabilityStore(mongoClient)
 	reservationRequestStore := server.initReservationRequestStore(mongoClient)
 	unavailabilityService := server.initUnavailabilityService(unavailabilityStore)
-	reservationRequestService := server.initReservationRequestService(reservationRequestStore)
+	reservationRequestService := server.initReservationRequestService(reservationRequestStore, unavailabilityService)
 	unavailabilityHandler := server.initUnavailabilityHandler(unavailabilityService)
 	reservationRequestHandler := server.initReservationRequestHandler(reservationRequestService)
 	unavailabilityHandler.Init(server.router)
@@ -90,8 +90,8 @@ func (server *Server) initUnavailabilityService(store domain.UnavailabilityStore
 	return application.NewUnavailabilityService(store)
 }
 
-func (server *Server) initReservationRequestService(store domain.ReservationRequestStore) *application.ReservationRequestService {
-	return application.NewReservationRequestService(store)
+func (server *Server) initReservationRequestService(store domain.ReservationRequestStore, unavailabilityService *application.UnavailabilityService) *application.ReservationRequestService {
+	return application.NewReservationRequestService(store, unavailabilityService)
 }
 
 func (server *Server) initUnavailabilityHandler(service *application.UnavailabilityService) *api.UnavailabilityHandler {

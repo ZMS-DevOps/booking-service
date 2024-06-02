@@ -2,6 +2,7 @@ package reservation_request
 
 import (
 	"context"
+	"fmt"
 	"github.com/ZMS-DevOps/booking-service/domain"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -115,4 +116,78 @@ func (store *ReservationRequestMongoDBStore) GetByAccommodationIdAndType(accommo
 		log.Fatal(err)
 	}
 	return reservationRequests, nil
+}
+
+func (store *ReservationRequestMongoDBStore) Update(id primitive.ObjectID, reservationRequest *domain.ReservationRequest) error {
+	filter := bson.M{"_id": id}
+
+	updateFields := bson.D{
+		{"accommodation_id", reservationRequest.AccommodationId},
+		{"user_id", reservationRequest.UserId},
+		{"start", reservationRequest.Start},
+		{"end", reservationRequest.End},
+		{"number_of_guests", reservationRequest.NumberOfGuests},
+		{"price_total", reservationRequest.PriceTotal},
+		{"status", reservationRequest.Status},
+	}
+	update := bson.D{{"$set", updateFields}}
+
+	_, err := store.reservationRequestCollection.UpdateOne(context.TODO(), filter, update)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (store *ReservationRequestMongoDBStore) Delete(id primitive.ObjectID) error {
+	filter := bson.M{"_id": id}
+	_, err := store.reservationRequestCollection.DeleteOne(context.TODO(), filter)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (store *ReservationRequestMongoDBStore) CancelOverlappingPendingRequests(reservationRequest *domain.ReservationRequest) error {
+	filter := bson.M{
+		"accommodation_id": reservationRequest.AccommodationId,
+		"status":           "pending",
+		"$or": []bson.M{
+			{
+				"start": bson.M{
+					"$lt": reservationRequest.End,
+				},
+				"end": bson.M{
+					"$gt": reservationRequest.Start,
+				},
+			},
+			{
+				"start": bson.M{
+					"$lt": reservationRequest.End,
+				},
+				"end": bson.M{
+					"$eq": primitive.Null{},
+				},
+			},
+		},
+	}
+
+	update := bson.M{
+		"$set": bson.M{
+			"status": "canceled",
+		},
+	}
+
+	updateResult, err := store.reservationRequestCollection.UpdateMany(context.TODO(), filter, update)
+	if err != nil {
+		return err
+	}
+
+	if updateResult.MatchedCount > 0 {
+		fmt.Printf("Matched %v documents and updated %v documents.\n", updateResult.MatchedCount, updateResult.ModifiedCount)
+	} else {
+		fmt.Println("No documents matched the query.")
+	}
+
+	return nil
 }
