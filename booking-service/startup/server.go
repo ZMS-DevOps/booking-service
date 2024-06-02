@@ -2,17 +2,19 @@ package startup
 
 import (
 	"fmt"
+	booking "github.com/ZMS-DevOps/booking-service/proto"
+	"github.com/gorilla/mux"
+	"google.golang.org/grpc"
+	"net"
+
+	//"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/ZMS-DevOps/booking-service/application"
 	"github.com/ZMS-DevOps/booking-service/domain"
 	"github.com/ZMS-DevOps/booking-service/infrastructure/api"
 	"github.com/ZMS-DevOps/booking-service/infrastructure/persistence"
-	booking "github.com/ZMS-DevOps/booking-service/proto"
 	"github.com/ZMS-DevOps/booking-service/startup/config"
-	"github.com/gorilla/mux"
 	"go.mongodb.org/mongo-driver/mongo"
-	"google.golang.org/grpc"
 	"log"
-	"net"
 	"net/http"
 )
 
