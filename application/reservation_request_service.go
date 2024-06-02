@@ -33,3 +33,7 @@ func (service *ReservationRequestService) GetByAccommodationId(accommodationId p
 		return service.store.GetByAccommodationIdAndType(accommodationId, *requestType)
 	}
 }
+
+func (service *ReservationRequestService) ApproveRequest(id primitive.ObjectID) error {
+	return nil
+}

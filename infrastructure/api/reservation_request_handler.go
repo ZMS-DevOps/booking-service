@@ -28,7 +28,7 @@ func (handler *ReservationRequestHandler) Init(router *mux.Router) {
 	router.HandleFunc("/booking/request/{id}/declined", handler.GetDeclined).Methods("GET")
 	router.HandleFunc("/booking/request/{id}/approved", handler.GetApproved).Methods("GET")
 	router.HandleFunc("/booking/request/{id}/completed", handler.GetCompleted).Methods("GET")
-	//router.HandleFunc("/booking/request/{id}/approve", handler.Approve).Methods("PUT")
+	router.HandleFunc("/booking/request/{id}/approve", handler.Approve).Methods("PUT")
 	//router.HandleFunc("/booking/request/{id}/decline", handler.Decline).Methods("PUT")
 	//router.HandleFunc("/booking/request/{id}", handler.Delete).Methods("DELETE")
 }
@@ -103,4 +103,19 @@ func (handler *ReservationRequestHandler) GetApproved(w http.ResponseWriter, r *
 func (handler *ReservationRequestHandler) GetCompleted(w http.ResponseWriter, r *http.Request) {
 	status := domain.Completed
 	handler.GetByStatus(w, r, &status)
+}
+
+func (handler *ReservationRequestHandler) Approve(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	accommodationId, err := primitive.ObjectIDFromHex(vars["id"])
+	if err != nil {
+		handleError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	if err := handler.service.ApproveRequest(accommodationId); err != nil {
+		w.WriteHeader(http.StatusNotFound)
+	}
+
+	w.WriteHeader(http.StatusOK)
 }
