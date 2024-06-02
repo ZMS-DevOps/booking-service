@@ -95,7 +95,6 @@ Apply za ceo ili vise direktorijuma
 kubectl -n backend  apply -R -f k8s
 kubectl -n backend  apply -R -f istio
 ```
-
 Ponisti prethodnu verziju i apply novu 
 ```shell
 kubectl replace --force -f ingress.yml
