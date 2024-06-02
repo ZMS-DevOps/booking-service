@@ -2,8 +2,6 @@ module github.com/ZMS-DevOps/booking-service
 
 go 1.17
 
-// replace github.com/tamararankovic/microservices_demo/common => ../common
-
 require (
 	go.mongodb.org/mongo-driver v1.8.4
 	google.golang.org/grpc v1.45.0

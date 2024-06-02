@@ -67,7 +67,6 @@ func (service *UnavailabilityService) RemoveUnavailabilityPeriod(accommodationId
 	return nil
 }
 
-// GetAll retrieves all unavailability records.
 func (service *UnavailabilityService) GetAll() ([]*domain.Unavailability, error) {
 	return service.store.GetAll()
 }
