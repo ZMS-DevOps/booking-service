@@ -1,6 +1,6 @@
 module github.com/ZMS-DevOps/booking-service
 
-go 1.17
+go 1.22
 
 // replace github.com/tamararankovic/microservices_demo/common => ../common
 

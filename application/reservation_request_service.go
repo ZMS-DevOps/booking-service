@@ -51,9 +51,7 @@ func (service *ReservationRequestService) ApproveRequest(id primitive.ObjectID) 
 	if err != nil {
 		return err
 	}
-	// block all other pending requests that have overlapping periods
 	err = service.store.CancelOverlappingPendingRequests(reservationRequest)
-	// create period of unavailability
 	err = service.createUnavailabilityPeriod(reservationRequest)
 	if err != nil {
 		return err
