@@ -54,7 +54,7 @@ func (service *UnavailabilityService) AddUnavailabilityPeriod(accommodationId pr
 	return nil
 }
 
-func (service *UnavailabilityService) RemoveUnavailabilityPeriod(accommodationId primitive.ObjectID, period *domain.UnavailabilityPeriod) interface{} {
+func (service *UnavailabilityService) RemoveUnavailabilityPeriod(accommodationId primitive.ObjectID, period *domain.UnavailabilityPeriod) error {
 	unavailability, err := service.store.GetByAccommodationId(accommodationId)
 	if err != nil {
 		return err

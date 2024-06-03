@@ -31,6 +31,7 @@ func (handler *ReservationRequestHandler) Init(router *mux.Router) {
 	router.HandleFunc("/booking/request/{id}/approve", handler.Approve).Methods("PUT")
 	router.HandleFunc("/booking/request/{id}/decline", handler.Decline).Methods("PUT")
 	router.HandleFunc("/booking/request/{id}", handler.Delete).Methods("DELETE")
+	router.HandleFunc("/booking/reservation/{id}/decline", handler.DeclineReservation).Methods("PUT")
 }
 
 func (handler *ReservationRequestHandler) AddRequest(w http.ResponseWriter, r *http.Request) {
@@ -130,6 +131,7 @@ func (handler *ReservationRequestHandler) Decline(w http.ResponseWriter, r *http
 
 	if err := handler.service.DeclineRequest(accommodationId); err != nil {
 		w.WriteHeader(http.StatusNotFound)
+		return
 	}
 
 	w.WriteHeader(http.StatusOK)
@@ -145,6 +147,23 @@ func (handler *ReservationRequestHandler) Delete(w http.ResponseWriter, r *http.
 
 	if err := handler.service.DeleteRequest(accommodationId); err != nil {
 		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
+func (handler *ReservationRequestHandler) DeclineReservation(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	accommodationId, err := primitive.ObjectIDFromHex(vars["id"])
+	if err != nil {
+		handleError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	if err := handler.service.DeclineReservation(accommodationId); err != nil {
+		handleError(w, http.StatusBadRequest, err.Error())
+		return
 	}
 
 	w.WriteHeader(http.StatusOK)

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/ZMS-DevOps/booking-service/domain"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"time"
 )
 
 type ReservationRequestService struct {
@@ -96,4 +97,45 @@ func (service *ReservationRequestService) createUnavailabilityPeriod(reservation
 	}
 	err := service.unavailabilityService.AddUnavailabilityPeriod(reservationRequest.AccommodationId, &unavailabilityPeriod)
 	return err
+}
+
+func (service *ReservationRequestService) DeclineReservation(id primitive.ObjectID) error {
+	reservationRequest, err := service.store.Get(id)
+	if err != nil {
+		return err
+	}
+	if reservationRequest.Status != domain.Approved {
+		return errors.New("reservation is not approved")
+	}
+
+	err = isBeforeReservation(reservationRequest)
+	if err != nil {
+		return err
+	}
+
+	reservationRequest.Status = domain.Declined
+	err = service.store.Update(id, reservationRequest)
+	if err != nil {
+		return err
+	}
+
+	unavailabilityPeriod := domain.UnavailabilityPeriod{
+		Start: reservationRequest.Start,
+		End:   reservationRequest.End,
+	}
+
+	err = service.unavailabilityService.RemoveUnavailabilityPeriod(reservationRequest.AccommodationId, &unavailabilityPeriod)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func isBeforeReservation(reservationRequest *domain.ReservationRequest) error {
+	today := time.Now()
+	if !today.Before(reservationRequest.Start.AddDate(0, 0, -1)) {
+		return errors.New("cannot decline the reservation less than one day before the start date")
+	}
+	return nil
 }
