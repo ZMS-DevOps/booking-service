@@ -4,14 +4,23 @@ option go_package = "proto/booking";
 
 package booking;
 
-
 service BookingService{
   rpc AddUnavailability(AddUnavailabilityRequest) returns(AddUnavailabilityResponse) {}
+  rpc UpdateReviewReservationRequestAutomatically(UpdateReviewReservationRequestAutomaticallyRequest) returns(UpdateReviewReservationRequestAutomaticallyResponse) {}
   rpc FilterAvailableAccommodation(FilterAvailableAccommodationRequest) returns(FilterAvailableAccommodationResponse) {}
+}
+
+message UpdateReviewReservationRequestAutomaticallyRequest {
+  string id = 1;
+  bool automatically = 2;
+}
+
+message UpdateReviewReservationRequestAutomaticallyResponse {
 }
 
 message AddUnavailabilityRequest {
   string id = 1;
+  bool automatically = 2;
 }
 
 message AddUnavailabilityResponse {

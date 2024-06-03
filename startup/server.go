@@ -2,8 +2,8 @@ package startup
 
 import (
 	"fmt"
-	"github.com/ZMS-DevOps/booking-service/infrastructure/persistence/accommodation"
 	"github.com/ZMS-DevOps/booking-service/infrastructure/persistence/reservation_request"
+	"github.com/ZMS-DevOps/booking-service/infrastructure/persistence/unavailability"
 	booking "github.com/ZMS-DevOps/booking-service/proto"
 	"github.com/gorilla/mux"
 	"google.golang.org/grpc"
@@ -56,7 +56,7 @@ func (server *Server) initMongoClient() *mongo.Client {
 }
 
 func (server *Server) initUnavailabilityStore(client *mongo.Client) domain.UnavailabilityStore {
-	store := accommodation.NewUnavailabilityMongoDBStore(client)
+	store := unavailability.NewUnavailabilityMongoDBStore(client)
 	store.DeleteAll()
 	for _, unavailability := range unavailabilities {
 		err := store.Insert(unavailability)

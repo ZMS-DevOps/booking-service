@@ -17,7 +17,7 @@ func NewUnavailabilityService(store domain.UnavailabilityStore) *UnavailabilityS
 	}
 }
 
-func (service *UnavailabilityService) AddUnavailability(accommodationId primitive.ObjectID) error {
+func (service *UnavailabilityService) AddUnavailability(accommodationId primitive.ObjectID, automatically bool) error {
 	unavailability, err := service.store.GetByAccommodationId(accommodationId)
 	if err != nil {
 		return err
@@ -25,16 +25,32 @@ func (service *UnavailabilityService) AddUnavailability(accommodationId primitiv
 
 	if unavailability != nil {
 		fmt.Printf(unavailability.AccommodationId.Hex())
-		return fmt.Errorf("unavailability already exists for accommodation ID: %s", accommodationId.Hex())
+		return fmt.Errorf("unavailability already exists for unavailability ID: %s", accommodationId.Hex())
 	}
 
 	newUnavailability := &domain.Unavailability{
-		Id:                    primitive.NewObjectID(),
-		AccommodationId:       accommodationId,
-		UnavailabilityPeriods: []domain.UnavailabilityPeriod{},
+		Id:                                    primitive.NewObjectID(),
+		AccommodationId:                       accommodationId,
+		UnavailabilityPeriods:                 []domain.UnavailabilityPeriod{},
+		ReviewReservationRequestAutomatically: automatically,
 	}
 
 	if err := service.store.Insert(newUnavailability); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (service *UnavailabilityService) UpdateUnavailability(accommodationId primitive.ObjectID, automatically bool) error {
+	unavailability, err := service.store.GetByAccommodationId(accommodationId)
+	if err != nil {
+		return err
+	}
+
+	unavailability.ReviewReservationRequestAutomatically = automatically
+
+	if err := service.store.Update(unavailability.Id, unavailability); err != nil {
 		return err
 	}
 
