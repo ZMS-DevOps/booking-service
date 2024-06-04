@@ -58,14 +58,19 @@ func removePeriod(toRemove domain.UnavailabilityPeriod, periods []domain.Unavail
 		if toRemove.Start.After(period.End) || toRemove.End.Before(period.Start) {
 			result = append(result, period)
 		} else {
-			if toRemove.Start.After(period.Start) && toRemove.End.Before(period.End) {
-				result = append(result, domain.UnavailabilityPeriod{Start: period.Start, End: toRemove.Start})
-				result = append(result, domain.UnavailabilityPeriod{Start: toRemove.End, End: period.End})
-			} else if toRemove.Start.After(period.Start) && toRemove.Start.Before(period.End) {
-				result = append(result, domain.UnavailabilityPeriod{Start: period.Start, End: toRemove.Start})
-			} else if toRemove.End.After(period.Start) && toRemove.End.Before(period.End) {
-				result = append(result, domain.UnavailabilityPeriod{Start: toRemove.End, End: period.End})
+			if period.Reason == domain.Reserved {
+				result = append(result, period)
+			} else {
+				if toRemove.Start.After(period.Start) && toRemove.End.Before(period.End) {
+					result = append(result, domain.UnavailabilityPeriod{Start: period.Start, End: toRemove.Start})
+					result = append(result, domain.UnavailabilityPeriod{Start: toRemove.End, End: period.End})
+				} else if toRemove.Start.After(period.Start) && toRemove.Start.Before(period.End) {
+					result = append(result, domain.UnavailabilityPeriod{Start: period.Start, End: toRemove.Start})
+				} else if toRemove.End.After(period.Start) && toRemove.End.Before(period.End) {
+					result = append(result, domain.UnavailabilityPeriod{Start: toRemove.End, End: period.End})
+				}
 			}
+
 		}
 	}
 	return result
