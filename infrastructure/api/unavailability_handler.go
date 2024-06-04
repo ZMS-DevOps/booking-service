@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/ZMS-DevOps/booking-service/application"
-	"github.com/ZMS-DevOps/booking-service/domain"
 	"github.com/ZMS-DevOps/booking-service/infrastructure/dto"
 	"github.com/gorilla/mux"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -19,13 +18,13 @@ type HealthCheckResponse struct {
 	Size string `json:"size"`
 }
 
-type AllUnavailabilityResponse struct {
-	Unavailability []*domain.Unavailability `json:"unavailability"`
-}
-
-type UnavailabilityResponse struct {
-	Unavailability *domain.Unavailability `json:"unavailability"`
-}
+//type AllUnavailabilityResponse struct {
+//	Unavailability []*domain.Unavailability `json:"unavailability"`
+//}
+//
+//type UnavailabilityResponse struct {
+//	Unavailability *domain.Unavailability `json:"unavailability"`
+//}
 
 func NewUnavailabilityHandler(service *application.UnavailabilityService) *UnavailabilityHandler {
 	server := &UnavailabilityHandler{
@@ -87,18 +86,20 @@ func (handler *UnavailabilityHandler) DeletePeriod(w http.ResponseWriter, r *htt
 }
 
 func (handler *UnavailabilityHandler) GetAll(w http.ResponseWriter, r *http.Request) {
-	unavailability, err := handler.service.GetAll()
+	unavailabilityList, err := handler.service.GetAll()
 
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 
-	response := AllUnavailabilityResponse{
-		Unavailability: unavailability,
+	var responseList []dto.UnavailabilityResponse
+	for _, unavailability := range unavailabilityList {
+		response := dto.MapToUnavailabilityResponse(*unavailability)
+		responseList = append(responseList, response)
 	}
 
-	jsonResponse, err := json.Marshal(response)
+	jsonResponse, err := json.Marshal(responseList)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -122,9 +123,7 @@ func (handler *UnavailabilityHandler) GetByAccommodationId(w http.ResponseWriter
 		return
 	}
 
-	response := UnavailabilityResponse{
-		Unavailability: unavailability,
-	}
+	response := dto.MapToUnavailabilityResponse(*unavailability)
 
 	jsonResponse, err := json.Marshal(response)
 	if err != nil {

@@ -17,7 +17,7 @@ func NewUnavailabilityService(store domain.UnavailabilityStore) *UnavailabilityS
 	}
 }
 
-func (service *UnavailabilityService) AddUnavailability(accommodationId primitive.ObjectID, automatically bool) error {
+func (service *UnavailabilityService) AddUnavailability(accommodationId primitive.ObjectID, accommodationName string, automatically bool) error {
 	unavailability, err := service.store.GetByAccommodationId(accommodationId)
 	if err != nil {
 		return err
@@ -30,6 +30,7 @@ func (service *UnavailabilityService) AddUnavailability(accommodationId primitiv
 	newUnavailability := &domain.Unavailability{
 		Id:                                    primitive.NewObjectID(),
 		AccommodationId:                       accommodationId,
+		AccommodationName:                     accommodationName,
 		UnavailabilityPeriods:                 []domain.UnavailabilityPeriod{},
 		ReviewReservationRequestAutomatically: automatically,
 	}
@@ -41,13 +42,14 @@ func (service *UnavailabilityService) AddUnavailability(accommodationId primitiv
 	return nil
 }
 
-func (service *UnavailabilityService) UpdateUnavailability(accommodationId primitive.ObjectID, automatically bool) error {
+func (service *UnavailabilityService) UpdateUnavailability(accommodationId primitive.ObjectID, accommodationName string, automatically bool) error {
 	unavailability, err := service.store.GetByAccommodationId(accommodationId)
 	if err != nil {
 		return err
 	}
 
 	unavailability.ReviewReservationRequestAutomatically = automatically
+	unavailability.AccommodationName = accommodationName
 
 	if err := service.store.Update(unavailability.Id, unavailability); err != nil {
 		return err

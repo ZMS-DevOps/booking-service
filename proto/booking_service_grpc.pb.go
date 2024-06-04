@@ -23,7 +23,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type BookingServiceClient interface {
 	AddUnavailability(ctx context.Context, in *AddUnavailabilityRequest, opts ...grpc.CallOption) (*AddUnavailabilityResponse, error)
-	UpdateReviewReservationRequestAutomatically(ctx context.Context, in *UpdateReviewReservationRequestAutomaticallyRequest, opts ...grpc.CallOption) (*UpdateReviewReservationRequestAutomaticallyResponse, error)
+	EditAccommodation(ctx context.Context, in *EditAccommodationRequest, opts ...grpc.CallOption) (*EditAccommodationResponse, error)
 	FilterAvailableAccommodation(ctx context.Context, in *FilterAvailableAccommodationRequest, opts ...grpc.CallOption) (*FilterAvailableAccommodationResponse, error)
 }
 
@@ -44,9 +44,9 @@ func (c *bookingServiceClient) AddUnavailability(ctx context.Context, in *AddUna
 	return out, nil
 }
 
-func (c *bookingServiceClient) UpdateReviewReservationRequestAutomatically(ctx context.Context, in *UpdateReviewReservationRequestAutomaticallyRequest, opts ...grpc.CallOption) (*UpdateReviewReservationRequestAutomaticallyResponse, error) {
-	out := new(UpdateReviewReservationRequestAutomaticallyResponse)
-	err := c.cc.Invoke(ctx, "/booking.BookingService/UpdateReviewReservationRequestAutomatically", in, out, opts...)
+func (c *bookingServiceClient) EditAccommodation(ctx context.Context, in *EditAccommodationRequest, opts ...grpc.CallOption) (*EditAccommodationResponse, error) {
+	out := new(EditAccommodationResponse)
+	err := c.cc.Invoke(ctx, "/booking.BookingService/EditAccommodation", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -67,7 +67,7 @@ func (c *bookingServiceClient) FilterAvailableAccommodation(ctx context.Context,
 // for forward compatibility
 type BookingServiceServer interface {
 	AddUnavailability(context.Context, *AddUnavailabilityRequest) (*AddUnavailabilityResponse, error)
-	UpdateReviewReservationRequestAutomatically(context.Context, *UpdateReviewReservationRequestAutomaticallyRequest) (*UpdateReviewReservationRequestAutomaticallyResponse, error)
+	EditAccommodation(context.Context, *EditAccommodationRequest) (*EditAccommodationResponse, error)
 	FilterAvailableAccommodation(context.Context, *FilterAvailableAccommodationRequest) (*FilterAvailableAccommodationResponse, error)
 	mustEmbedUnimplementedBookingServiceServer()
 }
@@ -79,8 +79,8 @@ type UnimplementedBookingServiceServer struct {
 func (UnimplementedBookingServiceServer) AddUnavailability(context.Context, *AddUnavailabilityRequest) (*AddUnavailabilityResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddUnavailability not implemented")
 }
-func (UnimplementedBookingServiceServer) UpdateReviewReservationRequestAutomatically(context.Context, *UpdateReviewReservationRequestAutomaticallyRequest) (*UpdateReviewReservationRequestAutomaticallyResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateReviewReservationRequestAutomatically not implemented")
+func (UnimplementedBookingServiceServer) EditAccommodation(context.Context, *EditAccommodationRequest) (*EditAccommodationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method EditAccommodation not implemented")
 }
 func (UnimplementedBookingServiceServer) FilterAvailableAccommodation(context.Context, *FilterAvailableAccommodationRequest) (*FilterAvailableAccommodationResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method FilterAvailableAccommodation not implemented")
@@ -116,20 +116,20 @@ func _BookingService_AddUnavailability_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
-func _BookingService_UpdateReviewReservationRequestAutomatically_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdateReviewReservationRequestAutomaticallyRequest)
+func _BookingService_EditAccommodation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(EditAccommodationRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(BookingServiceServer).UpdateReviewReservationRequestAutomatically(ctx, in)
+		return srv.(BookingServiceServer).EditAccommodation(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/booking.BookingService/UpdateReviewReservationRequestAutomatically",
+		FullMethod: "/booking.BookingService/EditAccommodation",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BookingServiceServer).UpdateReviewReservationRequestAutomatically(ctx, req.(*UpdateReviewReservationRequestAutomaticallyRequest))
+		return srv.(BookingServiceServer).EditAccommodation(ctx, req.(*EditAccommodationRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -164,8 +164,8 @@ var BookingService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _BookingService_AddUnavailability_Handler,
 		},
 		{
-			MethodName: "UpdateReviewReservationRequestAutomatically",
-			Handler:    _BookingService_UpdateReviewReservationRequestAutomatically_Handler,
+			MethodName: "EditAccommodation",
+			Handler:    _BookingService_EditAccommodation_Handler,
 		},
 		{
 			MethodName: "FilterAvailableAccommodation",

@@ -8,6 +8,7 @@ import (
 type Unavailability struct {
 	Id                                    primitive.ObjectID     `bson:"_id"`
 	AccommodationId                       primitive.ObjectID     `bson:"accommodation_id"`
+	AccommodationName                     string                 `bson:"accommodation_name"`
 	UnavailabilityPeriods                 []UnavailabilityPeriod `bson:"unavailability_periods"`
 	ReviewReservationRequestAutomatically bool                   `bson:"review_reservation_request_automatically"`
 }

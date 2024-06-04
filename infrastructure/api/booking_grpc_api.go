@@ -26,22 +26,22 @@ func (handler *BookingHandler) AddUnavailability(ctx context.Context, request *p
 	if err != nil {
 		return nil, err
 	}
-	if err := handler.service.AddUnavailability(objectId, request.Automatically); err != nil {
+	if err := handler.service.AddUnavailability(objectId, request.AccommodationName, request.Automatically); err != nil {
 		return nil, err
 	}
 	return &pb.AddUnavailabilityResponse{}, nil
 }
 
-func (handler *BookingHandler) UpdateReviewReservationRequestAutomatically(ctx context.Context, request *pb.UpdateReviewReservationRequestAutomaticallyRequest) (*pb.UpdateReviewReservationRequestAutomaticallyResponse, error) {
+func (handler *BookingHandler) EditAccommodation(ctx context.Context, request *pb.EditAccommodationRequest) (*pb.EditAccommodationResponse, error) {
 	id := request.Id
 	objectId, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return nil, err
 	}
-	if err := handler.service.UpdateUnavailability(objectId, request.Automatically); err != nil {
+	if err := handler.service.UpdateUnavailability(objectId, request.AccommodationName, request.Automatically); err != nil {
 		return nil, err
 	}
-	return &pb.UpdateReviewReservationRequestAutomaticallyResponse{}, nil
+	return &pb.EditAccommodationResponse{}, nil
 }
 
 func (handler *BookingHandler) FilterAvailableAccommodation(ctx context.Context, request *pb.FilterAvailableAccommodationRequest) (*pb.FilterAvailableAccommodationResponse, error) {
