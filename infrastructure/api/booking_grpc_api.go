@@ -26,7 +26,7 @@ func (handler *BookingHandler) AddUnavailability(ctx context.Context, request *p
 	if err != nil {
 		return nil, err
 	}
-	if err := handler.service.AddUnavailability(objectId, request.AccommodationName, request.Automatically); err != nil {
+	if err := handler.service.AddUnavailability(objectId, request.AccommodationName, request.Automatically, request.HostId); err != nil {
 		return nil, err
 	}
 	return &pb.AddUnavailabilityResponse{}, nil
@@ -38,7 +38,7 @@ func (handler *BookingHandler) EditAccommodation(ctx context.Context, request *p
 	if err != nil {
 		return nil, err
 	}
-	if err := handler.service.UpdateUnavailability(objectId, request.AccommodationName, request.Automatically); err != nil {
+	if err := handler.service.UpdateUnavailability(objectId, request.AccommodationName, request.Automatically, request.HostId); err != nil {
 		return nil, err
 	}
 	return &pb.EditAccommodationResponse{}, nil

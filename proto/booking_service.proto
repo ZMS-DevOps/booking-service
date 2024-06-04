@@ -14,6 +14,7 @@ message EditAccommodationRequest {
   string id = 1;
   string accommodation_name = 2;
   bool automatically = 3;
+  string host_id = 4;
 }
 
 message EditAccommodationResponse {
@@ -23,6 +24,7 @@ message AddUnavailabilityRequest {
   string id = 1;
   string accommodation_name = 2;
   bool automatically = 3;
+  string host_id = 4;
 }
 
 message AddUnavailabilityResponse {

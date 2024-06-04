@@ -37,6 +37,7 @@ func (handler *UnavailabilityHandler) Init(router *mux.Router) {
 	router.HandleFunc("/booking/health", handler.GetHealthCheck).Methods("GET")
 	router.HandleFunc("/booking/unavailability", handler.GetAll).Methods("GET")
 	router.HandleFunc("/booking/unavailability/{id}", handler.GetByAccommodationId).Methods("GET")
+	router.HandleFunc("/booking/unavailability/host/{id}", handler.GetByHostId).Methods("GET")
 	router.HandleFunc("/booking/unavailability/remove", handler.DeletePeriod).Methods("PUT")
 	router.HandleFunc("/booking/unavailability/add", handler.AddPeriod).Methods("PUT")
 }
@@ -95,8 +96,17 @@ func (handler *UnavailabilityHandler) GetAll(w http.ResponseWriter, r *http.Requ
 
 	var responseList []dto.UnavailabilityResponse
 	for _, unavailability := range unavailabilityList {
-		response := dto.MapToUnavailabilityResponse(*unavailability)
-		responseList = append(responseList, response)
+		for _, period := range unavailability.UnavailabilityPeriods {
+			response := dto.MapToUnavailabilityResponse(
+				period.Id,
+				unavailability.AccommodationId,
+				unavailability.AccommodationName,
+				period.Start,
+				period.End,
+				period.Reason,
+			)
+			responseList = append(responseList, response)
+		}
 	}
 
 	jsonResponse, err := json.Marshal(responseList)
@@ -123,9 +133,59 @@ func (handler *UnavailabilityHandler) GetByAccommodationId(w http.ResponseWriter
 		return
 	}
 
-	response := dto.MapToUnavailabilityResponse(*unavailability)
+	var responseList []dto.UnavailabilityResponse
+	for _, period := range unavailability.UnavailabilityPeriods {
+		response := dto.MapToUnavailabilityResponse(
+			period.Id,
+			unavailability.AccommodationId,
+			unavailability.AccommodationName,
+			period.Start,
+			period.End,
+			period.Reason,
+		)
+		responseList = append(responseList, response)
+	}
 
-	jsonResponse, err := json.Marshal(response)
+	jsonResponse, err := json.Marshal(responseList)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write(jsonResponse)
+}
+
+func (handler *UnavailabilityHandler) GetByHostId(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	accommodationId, err := primitive.ObjectIDFromHex(vars["id"])
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	unavailabilityList, err := handler.service.GetByHostId(accommodationId)
+
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	var responseList []dto.UnavailabilityResponse
+	for _, unavailability := range unavailabilityList {
+		for _, period := range unavailability.UnavailabilityPeriods {
+			response := dto.MapToUnavailabilityResponse(
+				period.Id,
+				unavailability.AccommodationId,
+				unavailability.AccommodationName,
+				period.Start,
+				period.End,
+				period.Reason,
+			)
+			responseList = append(responseList, response)
+		}
+	}
+
+	jsonResponse, err := json.Marshal(responseList)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
