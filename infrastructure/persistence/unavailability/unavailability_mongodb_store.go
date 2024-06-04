@@ -1,4 +1,4 @@
-package persistence
+package unavailability
 
 import (
 	"context"
@@ -128,6 +128,23 @@ func (store *UnavailabilityMongoDBStore) GetByAccommodationId(accommodationId pr
 		return nil, err
 	}
 	return &unavailability, nil
+}
+
+func (store *UnavailabilityMongoDBStore) Update(id primitive.ObjectID, unavailability *domain.Unavailability) error {
+	filter := bson.M{"_id": id}
+
+	updateFields := bson.D{
+		{"accommodation_id", unavailability.AccommodationId},
+		{"unavailability_periods", unavailability.UnavailabilityPeriods},
+		{"review_reservation_request_automatically", unavailability.ReviewReservationRequestAutomatically},
+	}
+	update := bson.D{{"$set", updateFields}}
+
+	_, err := store.unavailability.UpdateOne(context.TODO(), filter, update)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func decode(cursor *mongo.Cursor) (unavailabilities []*domain.Unavailability, err error) {

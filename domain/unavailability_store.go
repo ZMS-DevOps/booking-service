@@ -8,7 +8,7 @@ type UnavailabilityStore interface {
 	DeleteAll()
 	GetAll() ([]*Unavailability, error)
 	GetPeriod(id primitive.ObjectID) (UnavailabilityPeriod, error)
-
+	Update(id primitive.ObjectID, unavailability *Unavailability) error
 	GetUnavailabilityPeriods(id primitive.ObjectID) ([]UnavailabilityPeriod, error)
 	UpdateUnavailabilityPeriods(unavailabilityId primitive.ObjectID, periods []UnavailabilityPeriod) error
 	GetByAccommodationId(accommodationId primitive.ObjectID) (*Unavailability, error)
