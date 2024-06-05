@@ -31,18 +31,18 @@ func (store *ReservationRequestMongoDBStore) Get(id primitive.ObjectID) (*domain
 	return store.filterOne(filter)
 }
 
-func (store *ReservationRequestMongoDBStore) Insert(reservationRequest *domain.ReservationRequest) error {
+func (store *ReservationRequestMongoDBStore) DeleteAll() {
+	store.reservationRequestCollection.DeleteMany(context.TODO(), bson.D{{}})
+}
+
+func (store *ReservationRequestMongoDBStore) Insert(reservationRequest *domain.ReservationRequest) (*primitive.ObjectID, error) {
 	reservationRequest.Id = primitive.NewObjectID()
 	result, err := store.reservationRequestCollection.InsertOne(context.TODO(), reservationRequest)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	reservationRequest.Id = result.InsertedID.(primitive.ObjectID)
-	return nil
-}
-
-func (store *ReservationRequestMongoDBStore) DeleteAll() {
-	store.reservationRequestCollection.DeleteMany(context.TODO(), bson.D{{}})
+	return &reservationRequest.Id, nil
 }
 
 func (store *ReservationRequestMongoDBStore) GetAll() ([]*domain.ReservationRequest, error) {
@@ -194,5 +194,13 @@ func (store *ReservationRequestMongoDBStore) CancelOverlappingPendingRequests(re
 
 func (store *ReservationRequestMongoDBStore) GetByClientId(clientId primitive.ObjectID) ([]*domain.ReservationRequest, error) {
 	filter := bson.M{"user_id": clientId}
+	return store.filter(filter)
+}
+
+func (store *ReservationRequestMongoDBStore) GetByClientIdAndStatus(userId primitive.ObjectID, status domain.ReservationRequestStatus) ([]*domain.ReservationRequest, error) {
+	filter := bson.M{
+		"user_id": userId,
+		"status":  status,
+	}
 	return store.filter(filter)
 }
