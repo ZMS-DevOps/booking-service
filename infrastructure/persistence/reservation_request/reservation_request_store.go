@@ -191,3 +191,8 @@ func (store *ReservationRequestMongoDBStore) CancelOverlappingPendingRequests(re
 
 	return nil
 }
+
+func (store *ReservationRequestMongoDBStore) GetByClientId(clientId primitive.ObjectID) ([]*domain.ReservationRequest, error) {
+	filter := bson.M{"user_id": clientId}
+	return store.filter(filter)
+}

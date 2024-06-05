@@ -132,6 +132,27 @@ func (service *ReservationRequestService) DeclineReservation(id primitive.Object
 	return nil
 }
 
+func (service *ReservationRequestService) DeleteClient(clientId primitive.ObjectID) bool {
+	reservationRequests, err := service.store.GetByClientId(clientId)
+	if err != nil {
+		return false
+	}
+	for _, reservationRequest := range reservationRequests {
+		if reservationRequest.Status == domain.Pending {
+			return false
+		}
+	}
+	for _, reservationRequest := range reservationRequests {
+		if reservationRequest.Status == domain.Pending {
+			err = service.store.Delete(reservationRequest.Id)
+			if err != nil {
+				return false
+			}
+		}
+	}
+	return true
+}
+
 func isBeforeReservation(reservationRequest *domain.ReservationRequest) error {
 	today := time.Now()
 	if !today.Before(reservationRequest.Start.AddDate(0, 0, -1)) {
