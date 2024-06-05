@@ -23,7 +23,7 @@ func (service *ReservationRequestService) AddReservationRequest(reservationReque
 	reservationRequest.Id = primitive.NewObjectID()
 	reservationRequest.Status = domain.Pending
 
-	// todo add check if automatic and check if date range is available
+	// todom add check if automatic and check if date range is available
 	if err := service.store.Insert(reservationRequest); err != nil {
 		return err
 	}
