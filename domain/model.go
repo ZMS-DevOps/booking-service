@@ -32,6 +32,7 @@ type ReservationRequest struct {
 	Id                primitive.ObjectID       `bson:"_id"`
 	AccommodationId   primitive.ObjectID       `bson:"accommodation_id"`
 	AccommodationName string                   `bson:"accommodation_name"`
+	HostId            primitive.ObjectID       `bson:"host_id"`
 	UserId            primitive.ObjectID       `bson:"user_id"`
 	Start             time.Time                `bson:"start"`
 	End               time.Time                `bson:"end"`
@@ -45,6 +46,7 @@ type ReservationRequestStatus int
 const (
 	Pending ReservationRequestStatus = iota
 	Approved
-	Declined
+	DeclinedByUser
+	DeclinedByHost
 	Completed
 )

@@ -10,7 +10,28 @@ service BookingService{
   rpc FilterAvailableAccommodation(FilterAvailableAccommodationRequest) returns(FilterAvailableAccommodationResponse) {}
   rpc CheckDeleteHost(CheckDeleteHostRequest) returns(CheckDeleteHostResponse) {}
   rpc CheckDeleteClient(CheckDeleteClientRequest) returns(CheckDeleteClientResponse) {}
+  rpc CheckGuestHasReservationForHost(CheckGuestHasReservationForHostRequest) returns(CheckGuestHasReservationForHostResponse) {}
+  rpc CheckGuestHasReservationForAccommodation(CheckGuestHasReservationForAccommodationRequest) returns(CheckGuestHasReservationForAccommodationResponse) {}
 }
+
+message CheckGuestHasReservationForHostRequest{
+  string reviewerId = 1;
+  string hostId = 2;
+}
+
+message CheckGuestHasReservationForHostResponse {
+  bool hasReservation = 1;
+}
+
+message CheckGuestHasReservationForAccommodationResponse {
+  bool hasReservation = 1;
+}
+
+message CheckGuestHasReservationForAccommodationRequest{
+  string reviewerId = 1;
+  string accommodationId = 2;
+}
+
 
 message EditAccommodationRequest {
   string id = 1;

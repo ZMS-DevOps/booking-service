@@ -205,3 +205,11 @@ func (store *ReservationRequestMongoDBStore) GetByClientIdAndStatus(userId primi
 	}
 	return store.filter(filter)
 }
+
+//func (store *ReservationRequestMongoDBStore) GetByHostAndTime(userId primitive.ObjectID, past bool) ([]*domain.ReservationRequest, error) {
+//	filter := bson.M{
+//		"user_id": userId,
+//		"status":  status,
+//	}
+//	return store.filter(filter)
+//}

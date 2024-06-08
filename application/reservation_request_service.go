@@ -1,21 +1,27 @@
 package application
 
 import (
+	"encoding/json"
 	"errors"
 	"github.com/ZMS-DevOps/booking-service/domain"
+	"github.com/ZMS-DevOps/booking-service/infrastructure/dto"
+	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"log"
 	"time"
 )
 
 type ReservationRequestService struct {
 	store                 domain.ReservationRequestStore
 	unavailabilityService UnavailabilityService
+	producer              *kafka.Producer
 }
 
-func NewReservationRequestService(store domain.ReservationRequestStore, unavailabilityService *UnavailabilityService) *ReservationRequestService {
+func NewReservationRequestService(store domain.ReservationRequestStore, unavailabilityService *UnavailabilityService, producer *kafka.Producer) *ReservationRequestService {
 	return &ReservationRequestService{
 		store:                 store,
 		unavailabilityService: *unavailabilityService,
+		producer:              producer,
 	}
 }
 
@@ -36,6 +42,9 @@ func (service *ReservationRequestService) AddReservationRequest(reservationReque
 
 	if isAutomatic {
 		err = service.ApproveRequest(*requestId)
+		service.produceNotification("reservation-request.created", reservationRequest.HostId.Hex(), reservationRequest.Id.Hex(), "automatic")
+	} else {
+		service.produceNotification("reservation-request.created", reservationRequest.HostId.Hex(), reservationRequest.Id.Hex(), "")
 	}
 
 	if err != nil {
@@ -71,6 +80,7 @@ func (service *ReservationRequestService) ApproveRequest(id primitive.ObjectID) 
 	if err != nil {
 		return err
 	}
+	service.produceNotification("host-reviewed-reservation-request", reservationRequest.UserId.Hex(), reservationRequest.Id.Hex(), "accept-request")
 	return nil
 }
 
@@ -83,11 +93,12 @@ func (service *ReservationRequestService) DeclineRequest(id primitive.ObjectID) 
 		return errors.New("reservation is not pending")
 	}
 
-	reservationRequest.Status = domain.Declined
+	reservationRequest.Status = domain.DeclinedByHost //todom
 	err = service.store.Update(id, reservationRequest)
 	if err != nil {
 		return err
 	}
+	service.produceNotification("host-reviewed-reservation-request", reservationRequest.UserId.Hex(), reservationRequest.Id.Hex(), "decline-request")
 	return nil
 }
 
@@ -127,7 +138,7 @@ func (service *ReservationRequestService) DeclineReservation(id primitive.Object
 		return err
 	}
 
-	reservationRequest.Status = domain.Declined
+	reservationRequest.Status = domain.DeclinedByUser //todom
 	err = service.store.Update(id, reservationRequest)
 	if err != nil {
 		return err
@@ -138,10 +149,12 @@ func (service *ReservationRequestService) DeclineReservation(id primitive.Object
 		End:   reservationRequest.End,
 	}
 
-	err = service.unavailabilityService.RemoveUnavailabilityPeriod(reservationRequest.AccommodationId, &unavailabilityPeriod)
+	err = service.unavailabilityService.RemoveUnavailabilityPeriod(reservationRequest.AccommodationId, &unavailabilityPeriod) // todom
 	if err != nil {
 		return err
 	}
+
+	service.produceNotification("reservation.canceled", reservationRequest.HostId.Hex(), reservationRequest.Id.Hex(), "canceled")
 
 	return nil
 }
@@ -177,11 +190,29 @@ func (service *ReservationRequestService) GetByClientId(clientId primitive.Objec
 }
 
 func (service *ReservationRequestService) GetNumberOfCanceled(clientId primitive.ObjectID) int {
-	declinedRequests, err := service.store.GetByClientIdAndStatus(clientId, domain.Declined)
+	declinedRequests, err := service.store.GetByClientIdAndStatus(clientId, domain.DeclinedByHost) //todom
 	if err != nil {
 		return 0
 	}
 	return len(declinedRequests)
+}
+
+func (service *ReservationRequestService) GetFilteredRequests(userId primitive.ObjectID, userType string, past bool) ([]*domain.ReservationRequest, error) {
+	//var requests []domain.ReservationRequest
+	//var err error
+	//
+	//if userType == "host" {
+	//	requests, err = service.store.GetByHostAndTime(userId, past)		// todom fali hostId
+	//} else {
+	//	requests, err = service.store.GetByClientIdAndTime(userId, past)
+	//}
+	//
+	//if err != nil {
+	//	return nil, err
+	//}
+	//
+	//return requests, nil
+	return nil, nil
 }
 
 func isBeforeReservation(reservationRequest *domain.ReservationRequest) error {
@@ -190,4 +221,23 @@ func isBeforeReservation(reservationRequest *domain.ReservationRequest) error {
 		return errors.New("cannot decline the reservation less than one day before the start date")
 	}
 	return nil
+}
+
+func (service *ReservationRequestService) produceNotification(topic string, receiverId string, reservationId string, status string) {
+	notificationDTO := dto.NotificationDTO{
+		UserId:        receiverId,
+		ReservationId: reservationId,
+		Status:        status,
+	}
+	message, _ := json.Marshal(notificationDTO)
+	err := service.producer.Produce(&kafka.Message{
+		TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: kafka.PartitionAny},
+		Value:          message,
+	}, nil)
+
+	if err != nil {
+		log.Fatalf("Failed to produce message: %s", err)
+	}
+
+	service.producer.Flush(4 * 1000)
 }

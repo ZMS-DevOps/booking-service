@@ -5,6 +5,7 @@ import (
 	"github.com/ZMS-DevOps/booking-service/infrastructure/persistence/reservation_request"
 	"github.com/ZMS-DevOps/booking-service/infrastructure/persistence/unavailability"
 	booking "github.com/ZMS-DevOps/booking-service/proto"
+	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"github.com/gorilla/mux"
 	"google.golang.org/grpc"
 	"net"
@@ -32,12 +33,12 @@ func NewServer(config *config.Config) *Server {
 	return server
 }
 
-func (server *Server) Start() {
+func (server *Server) Start(producer *kafka.Producer) {
 	mongoClient := server.initMongoClient()
 	unavailabilityStore := server.initUnavailabilityStore(mongoClient)
 	reservationRequestStore := server.initReservationRequestStore(mongoClient)
 	unavailabilityService := server.initUnavailabilityService(unavailabilityStore)
-	reservationRequestService := server.initReservationRequestService(reservationRequestStore, unavailabilityService)
+	reservationRequestService := server.initReservationRequestService(reservationRequestStore, unavailabilityService, producer)
 	unavailabilityHandler := server.initUnavailabilityHandler(unavailabilityService)
 	reservationRequestHandler := server.initReservationRequestHandler(reservationRequestService)
 	unavailabilityHandler.Init(server.router)
@@ -89,8 +90,8 @@ func (server *Server) initUnavailabilityService(store domain.UnavailabilityStore
 	return application.NewUnavailabilityService(store)
 }
 
-func (server *Server) initReservationRequestService(store domain.ReservationRequestStore, unavailabilityService *application.UnavailabilityService) *application.ReservationRequestService {
-	return application.NewReservationRequestService(store, unavailabilityService)
+func (server *Server) initReservationRequestService(store domain.ReservationRequestStore, unavailabilityService *application.UnavailabilityService, producer *kafka.Producer) *application.ReservationRequestService {
+	return application.NewReservationRequestService(store, unavailabilityService, producer)
 }
 
 func (server *Server) initUnavailabilityHandler(service *application.UnavailabilityService) *api.UnavailabilityHandler {
