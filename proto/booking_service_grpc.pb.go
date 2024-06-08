@@ -27,6 +27,8 @@ type BookingServiceClient interface {
 	FilterAvailableAccommodation(ctx context.Context, in *FilterAvailableAccommodationRequest, opts ...grpc.CallOption) (*FilterAvailableAccommodationResponse, error)
 	CheckDeleteHost(ctx context.Context, in *CheckDeleteHostRequest, opts ...grpc.CallOption) (*CheckDeleteHostResponse, error)
 	CheckDeleteClient(ctx context.Context, in *CheckDeleteClientRequest, opts ...grpc.CallOption) (*CheckDeleteClientResponse, error)
+	CheckGuestHasReservationForHost(ctx context.Context, in *CheckGuestHasReservationForHostRequest, opts ...grpc.CallOption) (*CheckGuestHasReservationForHostResponse, error)
+	CheckGuestHasReservationForAccommodation(ctx context.Context, in *CheckGuestHasReservationForAccommodationRequest, opts ...grpc.CallOption) (*CheckGuestHasReservationForAccommodationResponse, error)
 }
 
 type bookingServiceClient struct {
@@ -82,6 +84,24 @@ func (c *bookingServiceClient) CheckDeleteClient(ctx context.Context, in *CheckD
 	return out, nil
 }
 
+func (c *bookingServiceClient) CheckGuestHasReservationForHost(ctx context.Context, in *CheckGuestHasReservationForHostRequest, opts ...grpc.CallOption) (*CheckGuestHasReservationForHostResponse, error) {
+	out := new(CheckGuestHasReservationForHostResponse)
+	err := c.cc.Invoke(ctx, "/booking.BookingService/CheckGuestHasReservationForHost", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *bookingServiceClient) CheckGuestHasReservationForAccommodation(ctx context.Context, in *CheckGuestHasReservationForAccommodationRequest, opts ...grpc.CallOption) (*CheckGuestHasReservationForAccommodationResponse, error) {
+	out := new(CheckGuestHasReservationForAccommodationResponse)
+	err := c.cc.Invoke(ctx, "/booking.BookingService/CheckGuestHasReservationForAccommodation", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // BookingServiceServer is the server API for BookingService service.
 // All implementations must embed UnimplementedBookingServiceServer
 // for forward compatibility
@@ -91,6 +111,8 @@ type BookingServiceServer interface {
 	FilterAvailableAccommodation(context.Context, *FilterAvailableAccommodationRequest) (*FilterAvailableAccommodationResponse, error)
 	CheckDeleteHost(context.Context, *CheckDeleteHostRequest) (*CheckDeleteHostResponse, error)
 	CheckDeleteClient(context.Context, *CheckDeleteClientRequest) (*CheckDeleteClientResponse, error)
+	CheckGuestHasReservationForHost(context.Context, *CheckGuestHasReservationForHostRequest) (*CheckGuestHasReservationForHostResponse, error)
+	CheckGuestHasReservationForAccommodation(context.Context, *CheckGuestHasReservationForAccommodationRequest) (*CheckGuestHasReservationForAccommodationResponse, error)
 	mustEmbedUnimplementedBookingServiceServer()
 }
 
@@ -112,6 +134,12 @@ func (UnimplementedBookingServiceServer) CheckDeleteHost(context.Context, *Check
 }
 func (UnimplementedBookingServiceServer) CheckDeleteClient(context.Context, *CheckDeleteClientRequest) (*CheckDeleteClientResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CheckDeleteClient not implemented")
+}
+func (UnimplementedBookingServiceServer) CheckGuestHasReservationForHost(context.Context, *CheckGuestHasReservationForHostRequest) (*CheckGuestHasReservationForHostResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CheckGuestHasReservationForHost not implemented")
+}
+func (UnimplementedBookingServiceServer) CheckGuestHasReservationForAccommodation(context.Context, *CheckGuestHasReservationForAccommodationRequest) (*CheckGuestHasReservationForAccommodationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CheckGuestHasReservationForAccommodation not implemented")
 }
 func (UnimplementedBookingServiceServer) mustEmbedUnimplementedBookingServiceServer() {}
 
@@ -216,6 +244,42 @@ func _BookingService_CheckDeleteClient_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
+func _BookingService_CheckGuestHasReservationForHost_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CheckGuestHasReservationForHostRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BookingServiceServer).CheckGuestHasReservationForHost(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/booking.BookingService/CheckGuestHasReservationForHost",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BookingServiceServer).CheckGuestHasReservationForHost(ctx, req.(*CheckGuestHasReservationForHostRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _BookingService_CheckGuestHasReservationForAccommodation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CheckGuestHasReservationForAccommodationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BookingServiceServer).CheckGuestHasReservationForAccommodation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/booking.BookingService/CheckGuestHasReservationForAccommodation",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BookingServiceServer).CheckGuestHasReservationForAccommodation(ctx, req.(*CheckGuestHasReservationForAccommodationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // BookingService_ServiceDesc is the grpc.ServiceDesc for BookingService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -242,6 +306,14 @@ var BookingService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CheckDeleteClient",
 			Handler:    _BookingService_CheckDeleteClient_Handler,
+		},
+		{
+			MethodName: "CheckGuestHasReservationForHost",
+			Handler:    _BookingService_CheckGuestHasReservationForHost_Handler,
+		},
+		{
+			MethodName: "CheckGuestHasReservationForAccommodation",
+			Handler:    _BookingService_CheckGuestHasReservationForAccommodation_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
