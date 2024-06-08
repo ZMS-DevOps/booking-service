@@ -123,6 +123,7 @@ func (store *ReservationRequestMongoDBStore) Update(id primitive.ObjectID, reser
 
 	updateFields := bson.D{
 		{"accommodation_id", reservationRequest.AccommodationId},
+		{"accommodation_name", reservationRequest.AccommodationName},
 		{"user_id", reservationRequest.UserId},
 		{"start", reservationRequest.Start},
 		{"end", reservationRequest.End},

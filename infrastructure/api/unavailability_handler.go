@@ -18,14 +18,6 @@ type HealthCheckResponse struct {
 	Size string `json:"size"`
 }
 
-//type AllUnavailabilityResponse struct {
-//	Unavailability []*domain.Unavailability `json:"unavailability"`
-//}
-//
-//type UnavailabilityResponse struct {
-//	Unavailability *domain.Unavailability `json:"unavailability"`
-//}
-
 func NewUnavailabilityHandler(service *application.UnavailabilityService) *UnavailabilityHandler {
 	server := &UnavailabilityHandler{
 		service: service,

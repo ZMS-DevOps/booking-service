@@ -30,12 +30,13 @@ func mapReason(reason *string) (*domain.UnavailabilityReason, error) {
 
 func MapRegistrationRequest(dto AddReservationRequestDto) *domain.ReservationRequest {
 	return &domain.ReservationRequest{
-		AccommodationId: dto.AccommodationId,
-		UserId:          dto.UserId,
-		Start:           dto.Start,
-		End:             dto.End,
-		NumberOfGuests:  dto.NumberOfGuests,
-		PriceTotal:      dto.PriceTotal,
+		AccommodationId:   dto.AccommodationId,
+		AccommodationName: dto.AccommodationName,
+		UserId:            dto.UserId,
+		Start:             dto.Start,
+		End:               dto.End,
+		NumberOfGuests:    dto.NumberOfGuests,
+		PriceTotal:        dto.PriceTotal,
 	}
 }
 
@@ -44,14 +45,15 @@ func MapReservationRequestResponse(requests []*domain.ReservationRequest) []*Res
 
 	for i := range requests {
 		reservationRequest := ReservationRequestResponse{
-			Id:              requests[i].Id,
-			AccommodationId: requests[i].AccommodationId,
-			UserId:          requests[i].UserId,
-			Start:           requests[i].Start,
-			End:             requests[i].End,
-			NumberOfGuests:  requests[i].NumberOfGuests,
-			PriceTotal:      requests[i].PriceTotal,
-			Status:          requests[i].Status,
+			Id:                requests[i].Id,
+			AccommodationId:   requests[i].AccommodationId,
+			AccommodationName: requests[i].AccommodationName,
+			UserId:            requests[i].UserId,
+			Start:             requests[i].Start,
+			End:               requests[i].End,
+			NumberOfGuests:    requests[i].NumberOfGuests,
+			PriceTotal:        requests[i].PriceTotal,
+			Status:            requests[i].Status,
 		}
 		response = append(response, &reservationRequest)
 	}

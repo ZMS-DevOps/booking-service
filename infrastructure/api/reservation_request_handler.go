@@ -23,6 +23,7 @@ func NewReservationRequestHandler(service *application.ReservationRequestService
 
 func (handler *ReservationRequestHandler) Init(router *mux.Router) {
 	router.HandleFunc("/booking/request", handler.AddRequest).Methods("POST")
+	router.HandleFunc("/booking/request/user/{id}", handler.GetByClient).Methods("GET")
 	router.HandleFunc("/booking/request/{id}", handler.GetAll).Methods("GET")
 	router.HandleFunc("/booking/request/{id}/pending", handler.GetPending).Methods("GET")
 	router.HandleFunc("/booking/request/{id}/declined", handler.GetDeclined).Methods("GET")
@@ -32,7 +33,7 @@ func (handler *ReservationRequestHandler) Init(router *mux.Router) {
 	router.HandleFunc("/booking/request/{id}/decline", handler.Decline).Methods("PUT")
 	router.HandleFunc("/booking/request/{id}", handler.Delete).Methods("DELETE")
 	router.HandleFunc("/booking/reservation/{id}/decline", handler.DeclineReservation).Methods("PUT")
-	router.HandleFunc("/booking/reservation/declined/client", handler.GetDeclinedByClient).Methods("PUT")
+	router.HandleFunc("/booking/reservation/user/{id}", handler.GetReservations).Methods("GET")
 }
 
 func (handler *ReservationRequestHandler) AddRequest(w http.ResponseWriter, r *http.Request) {
@@ -72,9 +73,13 @@ func (handler *ReservationRequestHandler) GetByStatus(w http.ResponseWriter, r *
 		return
 	}
 
-	response := dto.MapReservationRequestResponse(requests)
+	responses := dto.MapReservationRequestResponse(requests)
 
-	jsonResponse, err := json.Marshal(response)
+	for _, response := range responses {
+		response.NumberOfCanceledReservations = handler.service.GetNumberOfCanceled(response.UserId)
+	}
+
+	jsonResponse, err := json.Marshal(responses)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -170,28 +175,36 @@ func (handler *ReservationRequestHandler) DeclineReservation(w http.ResponseWrit
 	w.WriteHeader(http.StatusOK)
 }
 
-func (handler *ReservationRequestHandler) GetDeclinedByClient(w http.ResponseWriter, r *http.Request) {
+func (handler *ReservationRequestHandler) GetByClient(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	clientId, err := primitive.ObjectIDFromHex(vars["id"])
+	userId, err := primitive.ObjectIDFromHex(vars["id"])
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	clientDeclinedRequest, err := handler.service.GetByClientId(clientId, domain.Declined)
+	requests, err := handler.service.GetByClientId(userId, nil)
 
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 
-	response := dto.MapReservationRequestResponse(clientDeclinedRequest)
+	responses := dto.MapReservationRequestResponse(requests)
 
-	jsonResponse, err := json.Marshal(response)
+	for _, response := range responses {
+		response.NumberOfCanceledReservations = handler.service.GetNumberOfCanceled(response.UserId)
+	}
+
+	jsonResponse, err := json.Marshal(responses)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
 	w.Write(jsonResponse)
+}
+
+func (handler *ReservationRequestHandler) GetReservations(w http.ResponseWriter, r *http.Request) {
+
 }

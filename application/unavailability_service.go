@@ -116,12 +116,20 @@ func (service *UnavailabilityService) GetByHostId(id primitive.ObjectID) ([]*dom
 
 func (service *UnavailabilityService) FilterAvailable(ids []primitive.ObjectID, startDate time.Time, endDate time.Time) ([]primitive.ObjectID, error) {
 	var response []primitive.ObjectID
+	fmt.Println(ids)
+	fmt.Println(startDate)
+	fmt.Println(endDate)
 	for _, id := range ids {
 		unavailability, err := service.store.GetByAccommodationId(id)
+		fmt.Println(err)
+		fmt.Println(unavailability)
 		if err != nil {
 			return nil, err
 		}
-
+		if unavailability == nil {
+			response = append(response, id)
+			continue
+		}
 		available := true
 		for _, period := range unavailability.UnavailabilityPeriods {
 			if periodsOverlap(startDate, endDate, period.Start, period.End) {

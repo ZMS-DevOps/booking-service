@@ -167,8 +167,21 @@ func (service *ReservationRequestService) DeleteClient(clientId primitive.Object
 	return true
 }
 
-func (service *ReservationRequestService) GetByClientId(clientId primitive.ObjectID, status domain.ReservationRequestStatus) ([]*domain.ReservationRequest, error) {
-	return service.store.GetByClientIdAndStatus(clientId, status)
+func (service *ReservationRequestService) GetByClientId(clientId primitive.ObjectID, status *domain.ReservationRequestStatus) ([]*domain.ReservationRequest, error) {
+	if status != nil {
+		return service.store.GetByClientIdAndStatus(clientId, *status)
+	} else {
+		return service.store.GetByClientId(clientId)
+	}
+
+}
+
+func (service *ReservationRequestService) GetNumberOfCanceled(clientId primitive.ObjectID) int {
+	declinedRequests, err := service.store.GetByClientIdAndStatus(clientId, domain.Declined)
+	if err != nil {
+		return 0
+	}
+	return len(declinedRequests)
 }
 
 func isBeforeReservation(reservationRequest *domain.ReservationRequest) error {
