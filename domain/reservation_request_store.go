@@ -12,4 +12,5 @@ type ReservationRequestStore interface {
 	GetByAccommodationIdAndType(id primitive.ObjectID, requestType ReservationRequestStatus) ([]*ReservationRequest, error)
 	Delete(id primitive.ObjectID) error
 	CancelOverlappingPendingRequests(request *ReservationRequest) error
+	GetByClientId(clientId primitive.ObjectID) ([]*ReservationRequest, error)
 }

@@ -42,7 +42,7 @@ func (server *Server) Start() {
 	reservationRequestHandler := server.initReservationRequestHandler(reservationRequestService)
 	unavailabilityHandler.Init(server.router)
 	reservationRequestHandler.Init(server.router)
-	grpcHandler := server.initGrpcHandler(unavailabilityService)
+	grpcHandler := server.initGrpcHandler(unavailabilityService, reservationRequestService)
 	go server.startGrpcServer(grpcHandler)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", server.config.Port), server.router))
 }
@@ -101,6 +101,6 @@ func (server *Server) initReservationRequestHandler(service *application.Reserva
 	return api.NewReservationRequestHandler(service)
 }
 
-func (server *Server) initGrpcHandler(service *application.UnavailabilityService) *api.BookingHandler {
-	return api.NewBookingHandler(service)
+func (server *Server) initGrpcHandler(unavailabilityService *application.UnavailabilityService, reservationRequestService *application.ReservationRequestService) *api.BookingHandler {
+	return api.NewBookingHandler(unavailabilityService, reservationRequestService)
 }

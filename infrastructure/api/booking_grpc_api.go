@@ -11,12 +11,14 @@ import (
 
 type BookingHandler struct {
 	pb.UnimplementedBookingServiceServer
-	service *application.UnavailabilityService
+	unavailabilityService     *application.UnavailabilityService
+	reservationRequestService *application.ReservationRequestService
 }
 
-func NewBookingHandler(service *application.UnavailabilityService) *BookingHandler {
+func NewBookingHandler(unavailabilityService *application.UnavailabilityService, reservationRequestService *application.ReservationRequestService) *BookingHandler {
 	return &BookingHandler{
-		service: service,
+		unavailabilityService:     unavailabilityService,
+		reservationRequestService: reservationRequestService,
 	}
 }
 
@@ -26,7 +28,7 @@ func (handler *BookingHandler) AddUnavailability(ctx context.Context, request *p
 	if err != nil {
 		return nil, err
 	}
-	if err := handler.service.AddUnavailability(objectId, request.AccommodationName, request.Automatically, request.HostId); err != nil {
+	if err := handler.unavailabilityService.AddUnavailability(objectId, request.AccommodationName, request.Automatically, request.HostId); err != nil {
 		return nil, err
 	}
 	return &pb.AddUnavailabilityResponse{}, nil
@@ -38,7 +40,7 @@ func (handler *BookingHandler) EditAccommodation(ctx context.Context, request *p
 	if err != nil {
 		return nil, err
 	}
-	if err := handler.service.UpdateUnavailability(objectId, request.AccommodationName, request.Automatically, request.HostId); err != nil {
+	if err := handler.unavailabilityService.UpdateUnavailability(objectId, request.AccommodationName, request.Automatically, request.HostId); err != nil {
 		return nil, err
 	}
 	return &pb.EditAccommodationResponse{}, nil
@@ -55,7 +57,7 @@ func (handler *BookingHandler) FilterAvailableAccommodation(ctx context.Context,
 		return nil, err
 	}
 
-	available, err := handler.service.FilterAvailable(objectIDs, startDate, endDate)
+	available, err := handler.unavailabilityService.FilterAvailable(objectIDs, startDate, endDate)
 	if err != nil {
 		return nil, err
 	}
@@ -66,6 +68,28 @@ func (handler *BookingHandler) FilterAvailableAccommodation(ctx context.Context,
 	}
 
 	return &pb.FilterAvailableAccommodationResponse{AccommodationIds: accommodationIDs}, nil
+}
+
+func (handler *BookingHandler) CheckDeleteHost(ctx context.Context, request *pb.CheckDeleteHostRequest) (*pb.CheckDeleteHostResponse, error) {
+	hostId, err := primitive.ObjectIDFromHex(request.HostId)
+	if err != nil {
+		return nil, err
+	}
+
+	success, err := handler.unavailabilityService.DeleteHost(hostId)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.CheckDeleteHostResponse{Success: success}, nil
+}
+
+func (handler *BookingHandler) CheckDeleteClient(ctx context.Context, request *pb.CheckDeleteClientRequest) (*pb.CheckDeleteClientResponse, error) {
+	clientId, err := primitive.ObjectIDFromHex(request.HostId)
+	if err != nil {
+		return nil, err
+	}
+	success := handler.reservationRequestService.DeleteClient(clientId)
+	return &pb.CheckDeleteClientResponse{Success: success}, nil
 }
 
 func convertHexToObjectIDs(hexIDs []string) ([]primitive.ObjectID, error) {

@@ -137,6 +137,27 @@ func (service *UnavailabilityService) FilterAvailable(ids []primitive.ObjectID, 
 	return response, nil
 }
 
+func (service *UnavailabilityService) DeleteHost(hostId primitive.ObjectID) (bool, error) {
+	unavailabilityList, err := service.store.GetByHostId(hostId)
+	if err != nil {
+		return false, err
+	}
+	for _, unavailability := range unavailabilityList {
+		for _, period := range unavailability.UnavailabilityPeriods {
+			if isFuturePeriod(period) && period.Reason == domain.Reserved {
+				return false, nil
+			}
+		}
+	}
+	// todom delete reservation requests that are for host properties, is there need?
+	return true, nil
+}
+
+func isFuturePeriod(period domain.UnavailabilityPeriod) bool {
+	now := time.Now()
+	return period.Start.After(now)
+}
+
 func periodsOverlap(start1, end1, start2, end2 time.Time) bool {
 	return start1.After(start2) && start1.Before(end2) ||
 		start1.Before(start2) && end1.After(start2)

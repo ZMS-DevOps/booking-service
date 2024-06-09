@@ -25,6 +25,8 @@ type BookingServiceClient interface {
 	AddUnavailability(ctx context.Context, in *AddUnavailabilityRequest, opts ...grpc.CallOption) (*AddUnavailabilityResponse, error)
 	EditAccommodation(ctx context.Context, in *EditAccommodationRequest, opts ...grpc.CallOption) (*EditAccommodationResponse, error)
 	FilterAvailableAccommodation(ctx context.Context, in *FilterAvailableAccommodationRequest, opts ...grpc.CallOption) (*FilterAvailableAccommodationResponse, error)
+	CheckDeleteHost(ctx context.Context, in *CheckDeleteHostRequest, opts ...grpc.CallOption) (*CheckDeleteHostResponse, error)
+	CheckDeleteClient(ctx context.Context, in *CheckDeleteClientRequest, opts ...grpc.CallOption) (*CheckDeleteClientResponse, error)
 }
 
 type bookingServiceClient struct {
@@ -62,6 +64,24 @@ func (c *bookingServiceClient) FilterAvailableAccommodation(ctx context.Context,
 	return out, nil
 }
 
+func (c *bookingServiceClient) CheckDeleteHost(ctx context.Context, in *CheckDeleteHostRequest, opts ...grpc.CallOption) (*CheckDeleteHostResponse, error) {
+	out := new(CheckDeleteHostResponse)
+	err := c.cc.Invoke(ctx, "/booking.BookingService/CheckDeleteHost", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *bookingServiceClient) CheckDeleteClient(ctx context.Context, in *CheckDeleteClientRequest, opts ...grpc.CallOption) (*CheckDeleteClientResponse, error) {
+	out := new(CheckDeleteClientResponse)
+	err := c.cc.Invoke(ctx, "/booking.BookingService/CheckDeleteClient", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // BookingServiceServer is the server API for BookingService service.
 // All implementations must embed UnimplementedBookingServiceServer
 // for forward compatibility
@@ -69,6 +89,8 @@ type BookingServiceServer interface {
 	AddUnavailability(context.Context, *AddUnavailabilityRequest) (*AddUnavailabilityResponse, error)
 	EditAccommodation(context.Context, *EditAccommodationRequest) (*EditAccommodationResponse, error)
 	FilterAvailableAccommodation(context.Context, *FilterAvailableAccommodationRequest) (*FilterAvailableAccommodationResponse, error)
+	CheckDeleteHost(context.Context, *CheckDeleteHostRequest) (*CheckDeleteHostResponse, error)
+	CheckDeleteClient(context.Context, *CheckDeleteClientRequest) (*CheckDeleteClientResponse, error)
 	mustEmbedUnimplementedBookingServiceServer()
 }
 
@@ -84,6 +106,12 @@ func (UnimplementedBookingServiceServer) EditAccommodation(context.Context, *Edi
 }
 func (UnimplementedBookingServiceServer) FilterAvailableAccommodation(context.Context, *FilterAvailableAccommodationRequest) (*FilterAvailableAccommodationResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method FilterAvailableAccommodation not implemented")
+}
+func (UnimplementedBookingServiceServer) CheckDeleteHost(context.Context, *CheckDeleteHostRequest) (*CheckDeleteHostResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CheckDeleteHost not implemented")
+}
+func (UnimplementedBookingServiceServer) CheckDeleteClient(context.Context, *CheckDeleteClientRequest) (*CheckDeleteClientResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CheckDeleteClient not implemented")
 }
 func (UnimplementedBookingServiceServer) mustEmbedUnimplementedBookingServiceServer() {}
 
@@ -152,6 +180,42 @@ func _BookingService_FilterAvailableAccommodation_Handler(srv interface{}, ctx c
 	return interceptor(ctx, in, info, handler)
 }
 
+func _BookingService_CheckDeleteHost_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CheckDeleteHostRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BookingServiceServer).CheckDeleteHost(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/booking.BookingService/CheckDeleteHost",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BookingServiceServer).CheckDeleteHost(ctx, req.(*CheckDeleteHostRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _BookingService_CheckDeleteClient_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CheckDeleteClientRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BookingServiceServer).CheckDeleteClient(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/booking.BookingService/CheckDeleteClient",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BookingServiceServer).CheckDeleteClient(ctx, req.(*CheckDeleteClientRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // BookingService_ServiceDesc is the grpc.ServiceDesc for BookingService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -170,6 +234,14 @@ var BookingService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "FilterAvailableAccommodation",
 			Handler:    _BookingService_FilterAvailableAccommodation_Handler,
+		},
+		{
+			MethodName: "CheckDeleteHost",
+			Handler:    _BookingService_CheckDeleteHost_Handler,
+		},
+		{
+			MethodName: "CheckDeleteClient",
+			Handler:    _BookingService_CheckDeleteClient_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

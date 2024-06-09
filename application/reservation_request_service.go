@@ -23,7 +23,7 @@ func (service *ReservationRequestService) AddReservationRequest(reservationReque
 	reservationRequest.Id = primitive.NewObjectID()
 	reservationRequest.Status = domain.Pending
 
-	// todo add check if automatic and check if date range is available
+	// todom add check if automatic and check if date range is available
 	if err := service.store.Insert(reservationRequest); err != nil {
 		return err
 	}
@@ -130,6 +130,27 @@ func (service *ReservationRequestService) DeclineReservation(id primitive.Object
 	}
 
 	return nil
+}
+
+func (service *ReservationRequestService) DeleteClient(clientId primitive.ObjectID) bool {
+	reservationRequests, err := service.store.GetByClientId(clientId)
+	if err != nil {
+		return false
+	}
+	for _, reservationRequest := range reservationRequests {
+		if reservationRequest.Status == domain.Pending {
+			return false
+		}
+	}
+	for _, reservationRequest := range reservationRequests {
+		if reservationRequest.Status == domain.Pending {
+			err = service.store.Delete(reservationRequest.Id)
+			if err != nil {
+				return false
+			}
+		}
+	}
+	return true
 }
 
 func isBeforeReservation(reservationRequest *domain.ReservationRequest) error {
