@@ -9,6 +9,8 @@ type Config struct {
 	BookingDBPort     string
 	BookingDBUsername string
 	BookingDBPassword string
+	BootstrapServers  string
+	KafkaAuthPassword string
 }
 
 func NewConfig() *Config {
@@ -19,5 +21,7 @@ func NewConfig() *Config {
 		BookingDBUsername: os.Getenv("MONGO_INITDB_ROOT_USERNAME"),
 		BookingDBPassword: os.Getenv("MONGO_INITDB_ROOT_PASSWORD"),
 		GrpcPort:          os.Getenv("GRPC_PORT"),
+		BootstrapServers:  os.Getenv("KAFKA_BOOTSTRAP_SERVERS"),
+		KafkaAuthPassword: os.Getenv("KAFKA_AUTH_PASSWORD"),
 	}
 }
