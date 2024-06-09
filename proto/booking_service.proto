@@ -36,7 +36,6 @@ message CheckDeleteClientRequest {
 
 message CheckDeleteClientResponse {
   bool success = 1;
-
 }
 
 message AddUnavailabilityRequest {

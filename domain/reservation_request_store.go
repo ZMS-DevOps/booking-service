@@ -4,7 +4,7 @@ import "go.mongodb.org/mongo-driver/bson/primitive"
 
 type ReservationRequestStore interface {
 	Get(id primitive.ObjectID) (*ReservationRequest, error)
-	Insert(reservationRequest *ReservationRequest) error
+	Insert(reservationRequest *ReservationRequest) (*primitive.ObjectID, error)
 	Update(id primitive.ObjectID, reservationRequest *ReservationRequest) error
 	DeleteAll()
 	GetAll() ([]*ReservationRequest, error)
@@ -13,4 +13,5 @@ type ReservationRequestStore interface {
 	Delete(id primitive.ObjectID) error
 	CancelOverlappingPendingRequests(request *ReservationRequest) error
 	GetByClientId(clientId primitive.ObjectID) ([]*ReservationRequest, error)
+	GetByClientIdAndStatus(clientId primitive.ObjectID, status ReservationRequestStatus) ([]*ReservationRequest, error)
 }

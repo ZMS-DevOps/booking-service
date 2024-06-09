@@ -32,6 +32,7 @@ func (handler *ReservationRequestHandler) Init(router *mux.Router) {
 	router.HandleFunc("/booking/request/{id}/decline", handler.Decline).Methods("PUT")
 	router.HandleFunc("/booking/request/{id}", handler.Delete).Methods("DELETE")
 	router.HandleFunc("/booking/reservation/{id}/decline", handler.DeclineReservation).Methods("PUT")
+	router.HandleFunc("/booking/reservation/declined/client", handler.GetDeclinedByClient).Methods("PUT")
 }
 
 func (handler *ReservationRequestHandler) AddRequest(w http.ResponseWriter, r *http.Request) {
@@ -167,4 +168,30 @@ func (handler *ReservationRequestHandler) DeclineReservation(w http.ResponseWrit
 	}
 
 	w.WriteHeader(http.StatusOK)
+}
+
+func (handler *ReservationRequestHandler) GetDeclinedByClient(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	clientId, err := primitive.ObjectIDFromHex(vars["id"])
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	clientDeclinedRequest, err := handler.service.GetByClientId(clientId, domain.Declined)
+
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	response := dto.MapReservationRequestResponse(clientDeclinedRequest)
+
+	jsonResponse, err := json.Marshal(response)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write(jsonResponse)
 }
