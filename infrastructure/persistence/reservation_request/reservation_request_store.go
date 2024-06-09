@@ -271,3 +271,4 @@ func (store *ReservationRequestMongoDBStore) GetByClientIdAndTimeAndSearch(guest
 	}
 	return decodeReservationRequests(cursor)
 }
+
