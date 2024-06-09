@@ -1,19 +1,27 @@
 package application
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/ZMS-DevOps/booking-service/domain"
+	"github.com/ZMS-DevOps/booking-service/infrastructure/dto"
+	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"log"
 	"time"
 )
 
 type UnavailabilityService struct {
-	store domain.UnavailabilityStore
+	store                   domain.UnavailabilityStore
+	reservationRequestStore domain.ReservationRequestStore
+	producer                *kafka.Producer
 }
 
-func NewUnavailabilityService(store domain.UnavailabilityStore) *UnavailabilityService {
+func NewUnavailabilityService(store domain.UnavailabilityStore, producer *kafka.Producer, reservationRequestStore domain.ReservationRequestStore) *UnavailabilityService {
 	return &UnavailabilityService{
-		store: store,
+		store:                   store,
+		producer:                producer,
+		reservationRequestStore: reservationRequestStore,
 	}
 }
 
@@ -116,12 +124,20 @@ func (service *UnavailabilityService) GetByHostId(id primitive.ObjectID) ([]*dom
 
 func (service *UnavailabilityService) FilterAvailable(ids []primitive.ObjectID, startDate time.Time, endDate time.Time) ([]primitive.ObjectID, error) {
 	var response []primitive.ObjectID
+	fmt.Println(ids)
+	fmt.Println(startDate)
+	fmt.Println(endDate)
 	for _, id := range ids {
 		unavailability, err := service.store.GetByAccommodationId(id)
+		fmt.Println(err)
+		fmt.Println(unavailability)
 		if err != nil {
 			return nil, err
 		}
-
+		if unavailability == nil {
+			response = append(response, id)
+			continue
+		}
 		available := true
 		for _, period := range unavailability.UnavailabilityPeriods {
 			if periodsOverlap(startDate, endDate, period.Start, period.End) {
@@ -149,7 +165,12 @@ func (service *UnavailabilityService) DeleteHost(hostId primitive.ObjectID) (boo
 			}
 		}
 	}
-	// todom delete reservation requests that are for host properties, is there need?
+
+	service.produceDeleteAccommodationNotification(hostId)
+	err = service.reservationRequestStore.DeleteByHost(hostId)
+	if err != nil {
+		return false, err
+	}
 	return true, nil
 }
 
@@ -169,4 +190,23 @@ func isFuturePeriod(period domain.UnavailabilityPeriod) bool {
 func periodsOverlap(start1, end1, start2, end2 time.Time) bool {
 	return start1.After(start2) && start1.Before(end2) ||
 		start1.Before(start2) && end1.After(start2)
+}
+
+func (service *UnavailabilityService) produceDeleteAccommodationNotification(hostId primitive.ObjectID) {
+	var topic = "accommodation.delete"
+
+	notificationDTO := dto.AccommodationDeleteNotification{
+		Id: hostId.Hex(),
+	}
+	message, _ := json.Marshal(notificationDTO)
+	err := service.producer.Produce(&kafka.Message{
+		TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: kafka.PartitionAny},
+		Value:          message,
+	}, nil)
+
+	if err != nil {
+		log.Fatalf("Failed to produce message: %s", err)
+	}
+
+	service.producer.Flush(4 * 1000)
 }

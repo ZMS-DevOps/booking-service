@@ -23,16 +23,13 @@ func NewReservationRequestHandler(service *application.ReservationRequestService
 
 func (handler *ReservationRequestHandler) Init(router *mux.Router) {
 	router.HandleFunc("/booking/request", handler.AddRequest).Methods("POST")
+	router.HandleFunc("/booking/request/user/{id}", handler.GetByClient).Methods("GET")
 	router.HandleFunc("/booking/request/{id}", handler.GetAll).Methods("GET")
-	router.HandleFunc("/booking/request/{id}/pending", handler.GetPending).Methods("GET")
-	router.HandleFunc("/booking/request/{id}/declined", handler.GetDeclined).Methods("GET")
-	router.HandleFunc("/booking/request/{id}/approved", handler.GetApproved).Methods("GET")
-	router.HandleFunc("/booking/request/{id}/completed", handler.GetCompleted).Methods("GET")
 	router.HandleFunc("/booking/request/{id}/approve", handler.Approve).Methods("PUT")
 	router.HandleFunc("/booking/request/{id}/decline", handler.Decline).Methods("PUT")
 	router.HandleFunc("/booking/request/{id}", handler.Delete).Methods("DELETE")
 	router.HandleFunc("/booking/reservation/{id}/decline", handler.DeclineReservation).Methods("PUT")
-	router.HandleFunc("/booking/reservation/declined/client", handler.GetDeclinedByClient).Methods("PUT")
+	router.HandleFunc("/booking/request/user/{id}", handler.GetFilteredRequests).Methods("GET")
 }
 
 func (handler *ReservationRequestHandler) AddRequest(w http.ResponseWriter, r *http.Request) {
@@ -72,9 +69,13 @@ func (handler *ReservationRequestHandler) GetByStatus(w http.ResponseWriter, r *
 		return
 	}
 
-	response := dto.MapReservationRequestResponse(requests)
+	responses := dto.MapReservationRequestResponse(requests)
 
-	jsonResponse, err := json.Marshal(response)
+	for _, response := range responses {
+		response.NumberOfCanceledReservations = handler.service.GetNumberOfCanceled(response.UserId)
+	}
+
+	jsonResponse, err := json.Marshal(responses)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -92,11 +93,6 @@ func (handler *ReservationRequestHandler) GetPending(w http.ResponseWriter, r *h
 	handler.GetByStatus(w, r, &status)
 }
 
-func (handler *ReservationRequestHandler) GetDeclined(w http.ResponseWriter, r *http.Request) {
-	status := domain.Declined
-	handler.GetByStatus(w, r, &status)
-}
-
 func (handler *ReservationRequestHandler) GetApproved(w http.ResponseWriter, r *http.Request) {
 	status := domain.Approved
 	handler.GetByStatus(w, r, &status)
@@ -109,13 +105,13 @@ func (handler *ReservationRequestHandler) GetCompleted(w http.ResponseWriter, r 
 
 func (handler *ReservationRequestHandler) Approve(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	accommodationId, err := primitive.ObjectIDFromHex(vars["id"])
+	reservationRequestId, err := primitive.ObjectIDFromHex(vars["id"])
 	if err != nil {
 		handleError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	if err := handler.service.ApproveRequest(accommodationId); err != nil {
+	if err := handler.service.ApproveRequest(reservationRequestId); err != nil {
 		w.WriteHeader(http.StatusNotFound)
 	}
 
@@ -124,13 +120,13 @@ func (handler *ReservationRequestHandler) Approve(w http.ResponseWriter, r *http
 
 func (handler *ReservationRequestHandler) Decline(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	accommodationId, err := primitive.ObjectIDFromHex(vars["id"])
+	reservationRequestId, err := primitive.ObjectIDFromHex(vars["id"])
 	if err != nil {
 		handleError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	if err := handler.service.DeclineRequest(accommodationId); err != nil {
+	if err := handler.service.DeclineRequest(reservationRequestId); err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
@@ -170,28 +166,78 @@ func (handler *ReservationRequestHandler) DeclineReservation(w http.ResponseWrit
 	w.WriteHeader(http.StatusOK)
 }
 
-func (handler *ReservationRequestHandler) GetDeclinedByClient(w http.ResponseWriter, r *http.Request) {
+func (handler *ReservationRequestHandler) GetByClient(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	clientId, err := primitive.ObjectIDFromHex(vars["id"])
+	userId, err := primitive.ObjectIDFromHex(vars["id"])
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	clientDeclinedRequest, err := handler.service.GetByClientId(clientId, domain.Declined)
+	requests, err := handler.service.GetByClientId(userId, nil)
 
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 
-	response := dto.MapReservationRequestResponse(clientDeclinedRequest)
+	responses := dto.MapReservationRequestResponse(requests)
 
-	jsonResponse, err := json.Marshal(response)
+	for _, response := range responses {
+		response.NumberOfCanceledReservations = handler.service.GetNumberOfCanceled(response.UserId)
+	}
+
+	jsonResponse, err := json.Marshal(responses)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+	w.WriteHeader(http.StatusOK)
+	w.Write(jsonResponse)
+}
+
+func (handler *ReservationRequestHandler) GetFilteredRequests(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	userId, err := primitive.ObjectIDFromHex(vars["id"])
+	if err != nil {
+		handleError(w, http.StatusBadRequest, "Invalid user ID")
+		return
+	}
+
+	userType := r.URL.Query().Get("user-type")
+	if userType != "host" && userType != "guest" {
+		handleError(w, http.StatusBadRequest, "Invalid user type")
+		return
+	}
+
+	pastStr := r.URL.Query().Get("past")
+	past := false
+	if pastStr == "true" {
+		past = true
+	} else if pastStr != "false" {
+		handleError(w, http.StatusBadRequest, "Invalid past parameter")
+		return
+	}
+
+	searchStr := r.URL.Query().Get("search")
+
+	requests, err := handler.service.GetFilteredRequests(userId, userType, past, searchStr)
+	if err != nil {
+		handleError(w, http.StatusNotFound, "No reservations found")
+		return
+	}
+
+	responses := dto.MapReservationRequestResponse(requests)
+	for _, response := range responses {
+		response.NumberOfCanceledReservations = handler.service.GetNumberOfCanceled(response.UserId)
+	}
+
+	jsonResponse, err := json.Marshal(responses)
+	if err != nil {
+		handleError(w, http.StatusInternalServerError, "Error marshalling response")
+		return
+	}
+
 	w.WriteHeader(http.StatusOK)
 	w.Write(jsonResponse)
 }
