@@ -24,7 +24,6 @@ func (service *UnavailabilityService) AddUnavailability(accommodationId primitiv
 	}
 
 	if unavailability != nil {
-		fmt.Printf(unavailability.AccommodationId.Hex())
 		return fmt.Errorf("unavailability already exists for unavailability ID: %s", accommodationId.Hex())
 	}
 
@@ -76,7 +75,9 @@ func (service *UnavailabilityService) RemoveUnavailabilityPeriod(accommodationId
 		return err
 	}
 	period.Id = primitive.NewObjectID()
-	if err := service.store.UpdateUnavailabilityPeriods(unavailability.Id, removePeriod(*period, unavailability.UnavailabilityPeriods)); err != nil {
+
+	updatedPeriods := removePeriod(*period, unavailability.UnavailabilityPeriods)
+	if err := service.store.UpdateUnavailabilityPeriods(unavailability.Id, updatedPeriods); err != nil {
 		return err
 	}
 
