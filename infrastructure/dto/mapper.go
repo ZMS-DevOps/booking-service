@@ -1,31 +1,15 @@
 package dto
 
 import (
-	"fmt"
 	"github.com/ZMS-DevOps/booking-service/domain"
 )
 
 func MapUnavailabilityPeriod(addUnavailabilityPeriodDto *ManageUnavailabilityPeriodDto) *domain.UnavailabilityPeriod {
-	var reason, _ = mapReason(addUnavailabilityPeriodDto.Reason)
 	unavailabilityPeriod := &domain.UnavailabilityPeriod{
-		Start:  addUnavailabilityPeriodDto.Start,
-		End:    addUnavailabilityPeriodDto.End,
-		Reason: *reason,
+		Start: addUnavailabilityPeriodDto.Start,
+		End:   addUnavailabilityPeriodDto.End,
 	}
 	return unavailabilityPeriod
-}
-
-func mapReason(reason *string) (*domain.UnavailabilityReason, error) {
-	var unavailabilityReason domain.UnavailabilityReason
-	switch *reason {
-	case "Reserved":
-		unavailabilityReason = domain.Reserved
-	case "OwnerSet":
-		unavailabilityReason = domain.OwnerSet
-	default:
-		return nil, fmt.Errorf("invalid pricing type: %s", *reason)
-	}
-	return &unavailabilityReason, nil
 }
 
 func MapRegistrationRequest(dto AddReservationRequestDto) *domain.ReservationRequest {
@@ -33,6 +17,7 @@ func MapRegistrationRequest(dto AddReservationRequestDto) *domain.ReservationReq
 		AccommodationId:   dto.AccommodationId,
 		AccommodationName: dto.AccommodationName,
 		UserId:            dto.UserId,
+		HostId:            dto.HostId,
 		Start:             dto.Start,
 		End:               dto.End,
 		NumberOfGuests:    dto.NumberOfGuests,

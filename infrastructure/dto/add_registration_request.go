@@ -18,14 +18,6 @@ type AddReservationRequestDto struct {
 	PriceTotal        float32            `bson:"price_total"`
 }
 
-type ReservationRequestStatus int
-
-const (
-	Pending ReservationRequestStatus = iota
-	Approved
-	Declined
-)
-
 func ValidateAddRegistrationRequestDto(dto AddReservationRequestDto) error {
 	validate := validator.New()
 

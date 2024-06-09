@@ -25,10 +25,6 @@ func (handler *ReservationRequestHandler) Init(router *mux.Router) {
 	router.HandleFunc("/booking/request", handler.AddRequest).Methods("POST")
 	router.HandleFunc("/booking/request/user/{id}", handler.GetByClient).Methods("GET")
 	router.HandleFunc("/booking/request/{id}", handler.GetAll).Methods("GET")
-	//router.HandleFunc("/booking/request/{id}/pending", handler.GetPending).Methods("GET")
-	//router.HandleFunc("/booking/request/{id}/declined", handler.GetDeclined).Methods("GET")
-	//router.HandleFunc("/booking/request/{id}/approved", handler.GetApproved).Methods("GET")
-	//router.HandleFunc("/booking/request/{id}/completed", handler.GetCompleted).Methods("GET")
 	router.HandleFunc("/booking/request/{id}/approve", handler.Approve).Methods("PUT")
 	router.HandleFunc("/booking/request/{id}/decline", handler.Decline).Methods("PUT")
 	router.HandleFunc("/booking/request/{id}", handler.Delete).Methods("DELETE")
@@ -96,11 +92,6 @@ func (handler *ReservationRequestHandler) GetPending(w http.ResponseWriter, r *h
 	status := domain.Pending
 	handler.GetByStatus(w, r, &status)
 }
-
-//func (handler *ReservationRequestHandler) GetDeclined(w http.ResponseWriter, r *http.Request) {
-//	status := domain.Declined
-//	handler.GetByStatus(w, r, &status)
-//}
 
 func (handler *ReservationRequestHandler) GetApproved(w http.ResponseWriter, r *http.Request) {
 	status := domain.Approved
@@ -228,7 +219,9 @@ func (handler *ReservationRequestHandler) GetFilteredRequests(w http.ResponseWri
 		return
 	}
 
-	requests, err := handler.service.GetFilteredRequests(userId, userType, past)
+	searchStr := r.URL.Query().Get("search")
+
+	requests, err := handler.service.GetFilteredRequests(userId, userType, past, searchStr)
 	if err != nil {
 		handleError(w, http.StatusNotFound, "No reservations found")
 		return

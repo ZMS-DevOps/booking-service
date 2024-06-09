@@ -8,6 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"log"
+	"time"
 )
 
 const (
@@ -149,6 +150,15 @@ func (store *ReservationRequestMongoDBStore) Delete(id primitive.ObjectID) error
 	return nil
 }
 
+func (store *ReservationRequestMongoDBStore) DeleteByHost(id primitive.ObjectID) error {
+	filter := bson.M{"host_id": id}
+	_, err := store.reservationRequestCollection.DeleteMany(context.TODO(), filter)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (store *ReservationRequestMongoDBStore) CancelOverlappingPendingRequests(reservationRequest *domain.ReservationRequest) error {
 	filter := bson.M{
 		"accommodation_id": reservationRequest.AccommodationId,
@@ -175,7 +185,7 @@ func (store *ReservationRequestMongoDBStore) CancelOverlappingPendingRequests(re
 
 	update := bson.M{
 		"$set": bson.M{
-			"status": "canceled",
+			"status": domain.DeclinedByHost,
 		},
 	}
 
@@ -206,10 +216,58 @@ func (store *ReservationRequestMongoDBStore) GetByClientIdAndStatus(userId primi
 	return store.filter(filter)
 }
 
-//func (store *ReservationRequestMongoDBStore) GetByHostAndTime(userId primitive.ObjectID, past bool) ([]*domain.ReservationRequest, error) {
-//	filter := bson.M{
-//		"user_id": userId,
-//		"status":  status,
-//	}
-//	return store.filter(filter)
-//}
+func (store *ReservationRequestMongoDBStore) GetByHostAndTimeAndSearch(hostId primitive.ObjectID, past bool, search string) ([]*domain.ReservationRequest, error) {
+	filter := bson.M{
+		"host_id": hostId,
+	}
+	now := time.Now()
+	if past {
+		filter["end"] = bson.M{"$lt": now}
+	} else {
+		filter["end"] = bson.M{"$gte": now}
+	}
+
+	store.searchByString(search, filter)
+
+	cursor, err := store.reservationRequestCollection.Find(context.TODO(), filter)
+	if err != nil {
+		return nil, err
+	}
+	return decodeReservationRequests(cursor)
+}
+
+func (store *ReservationRequestMongoDBStore) searchByString(search string, filter bson.M) {
+	if search != "" {
+		objectId, err := primitive.ObjectIDFromHex(search)
+		idMatch := bson.M{"_id": objectId}
+		if err != nil {
+			idMatch = bson.M{}
+		}
+
+		filter["$or"] = []bson.M{
+			{"accommodation_name": bson.M{"$regex": search, "$options": "i"}},
+			{"status": bson.M{"$regex": search, "$options": "i"}},
+			idMatch,
+		}
+	}
+}
+
+func (store *ReservationRequestMongoDBStore) GetByClientIdAndTimeAndSearch(guestId primitive.ObjectID, past bool, search string) ([]*domain.ReservationRequest, error) {
+	filter := bson.M{
+		"user_id": guestId,
+	}
+	now := time.Now()
+	if past {
+		filter["end"] = bson.M{"$lt": now}
+	} else {
+		filter["end"] = bson.M{"$gte": now}
+	}
+
+	store.searchByString(search, filter)
+
+	cursor, err := store.reservationRequestCollection.Find(context.TODO(), filter)
+	if err != nil {
+		return nil, err
+	}
+	return decodeReservationRequests(cursor)
+}

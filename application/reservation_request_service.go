@@ -93,7 +93,7 @@ func (service *ReservationRequestService) DeclineRequest(id primitive.ObjectID) 
 		return errors.New("reservation is not pending")
 	}
 
-	reservationRequest.Status = domain.DeclinedByHost //todom
+	reservationRequest.Status = domain.DeclinedByHost
 	err = service.store.Update(id, reservationRequest)
 	if err != nil {
 		return err
@@ -133,12 +133,11 @@ func (service *ReservationRequestService) DeclineReservation(id primitive.Object
 		return errors.New("reservation is not approved")
 	}
 
-	err = isBeforeReservation(reservationRequest)
-	if err != nil {
-		return err
+	if !isReservationInFuture(reservationRequest) {
+		return errors.New("reservation is in the future")
 	}
 
-	reservationRequest.Status = domain.DeclinedByUser //todom
+	reservationRequest.Status = domain.DeclinedByUser
 	err = service.store.Update(id, reservationRequest)
 	if err != nil {
 		return err
@@ -165,16 +164,14 @@ func (service *ReservationRequestService) DeleteClient(clientId primitive.Object
 		return false
 	}
 	for _, reservationRequest := range reservationRequests {
-		if reservationRequest.Status == domain.Pending {
+		if isReservationInFuture(reservationRequest) && reservationRequest.Status == domain.Approved {
 			return false
 		}
 	}
 	for _, reservationRequest := range reservationRequests {
-		if reservationRequest.Status == domain.Pending {
-			err = service.store.Delete(reservationRequest.Id)
-			if err != nil {
-				return false
-			}
+		err = service.store.Delete(reservationRequest.Id)
+		if err != nil {
+			return false
 		}
 	}
 	return true
@@ -190,37 +187,36 @@ func (service *ReservationRequestService) GetByClientId(clientId primitive.Objec
 }
 
 func (service *ReservationRequestService) GetNumberOfCanceled(clientId primitive.ObjectID) int {
-	declinedRequests, err := service.store.GetByClientIdAndStatus(clientId, domain.DeclinedByHost) //todom
+	declinedRequests, err := service.store.GetByClientIdAndStatus(clientId, domain.DeclinedByUser)
 	if err != nil {
 		return 0
 	}
 	return len(declinedRequests)
 }
 
-func (service *ReservationRequestService) GetFilteredRequests(userId primitive.ObjectID, userType string, past bool) ([]*domain.ReservationRequest, error) {
-	//var requests []domain.ReservationRequest
-	//var err error
-	//
-	//if userType == "host" {
-	//	requests, err = service.store.GetByHostAndTime(userId, past)		// todom fali hostId
-	//} else {
-	//	requests, err = service.store.GetByClientIdAndTime(userId, past)
-	//}
-	//
-	//if err != nil {
-	//	return nil, err
-	//}
-	//
-	//return requests, nil
-	return nil, nil
+func (service *ReservationRequestService) GetFilteredRequests(userId primitive.ObjectID, userType string, past bool, search string) ([]*domain.ReservationRequest, error) {
+	var requests []*domain.ReservationRequest
+	var err error
+
+	if userType == "host" {
+		requests, err = service.store.GetByHostAndTimeAndSearch(userId, past, search)
+	} else {
+		requests, err = service.store.GetByClientIdAndTimeAndSearch(userId, past, search)
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return requests, nil
 }
 
-func isBeforeReservation(reservationRequest *domain.ReservationRequest) error {
+func isReservationInFuture(reservationRequest *domain.ReservationRequest) bool {
 	today := time.Now()
 	if !today.Before(reservationRequest.Start.AddDate(0, 0, -1)) {
-		return errors.New("cannot decline the reservation less than one day before the start date")
+		return false
 	}
-	return nil
+	return true
 }
 
 func (service *ReservationRequestService) produceNotification(topic string, receiverId string, reservationId string, status string) {

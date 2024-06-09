@@ -37,7 +37,7 @@ func (server *Server) Start(producer *kafka.Producer) {
 	mongoClient := server.initMongoClient()
 	unavailabilityStore := server.initUnavailabilityStore(mongoClient)
 	reservationRequestStore := server.initReservationRequestStore(mongoClient)
-	unavailabilityService := server.initUnavailabilityService(unavailabilityStore)
+	unavailabilityService := server.initUnavailabilityService(unavailabilityStore, producer, reservationRequestStore)
 	reservationRequestService := server.initReservationRequestService(reservationRequestStore, unavailabilityService, producer)
 	unavailabilityHandler := server.initUnavailabilityHandler(unavailabilityService)
 	reservationRequestHandler := server.initReservationRequestHandler(reservationRequestService)
@@ -86,8 +86,8 @@ func (server *Server) startGrpcServer(bookingHandler *api.BookingHandler) {
 	}
 }
 
-func (server *Server) initUnavailabilityService(store domain.UnavailabilityStore) *application.UnavailabilityService {
-	return application.NewUnavailabilityService(store)
+func (server *Server) initUnavailabilityService(store domain.UnavailabilityStore, producer *kafka.Producer, reservationRequestStore domain.ReservationRequestStore) *application.UnavailabilityService {
+	return application.NewUnavailabilityService(store, producer, reservationRequestStore)
 }
 
 func (server *Server) initReservationRequestService(store domain.ReservationRequestStore, unavailabilityService *application.UnavailabilityService, producer *kafka.Producer) *application.ReservationRequestService {
