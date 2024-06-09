@@ -92,6 +92,32 @@ func (handler *BookingHandler) CheckDeleteClient(ctx context.Context, request *p
 	return &pb.CheckDeleteClientResponse{Success: success}, nil
 }
 
+func (handler *BookingHandler) CheckGuestHasReservationForHost(ctx context.Context, request *pb.CheckGuestHasReservationForHostRequest) (*pb.CheckGuestHasReservationForHostResponse, error) {
+	reviewerId, err := primitive.ObjectIDFromHex(request.ReviewerId)
+	if err != nil {
+		return nil, err
+	}
+	hostId, err := primitive.ObjectIDFromHex(request.HostId)
+	if err != nil {
+		return nil, err
+	}
+	hasReservation := handler.reservationRequestService.CheckGuestHasReservationForHost(reviewerId, hostId)
+	return &pb.CheckGuestHasReservationForHostResponse{HasReservation: hasReservation}, nil
+}
+
+func (handler *BookingHandler) CheckGuestHasReservationForAccommodation(ctx context.Context, request *pb.CheckGuestHasReservationForAccommodationRequest) (*pb.CheckGuestHasReservationForAccommodationResponse, error) {
+	reviewerId, err := primitive.ObjectIDFromHex(request.ReviewerId)
+	if err != nil {
+		return nil, err
+	}
+	hostId, err := primitive.ObjectIDFromHex(request.AccommodationId)
+	if err != nil {
+		return nil, err
+	}
+	hasReservation := handler.reservationRequestService.CheckGuestHasReservationForAccommodation(reviewerId, hostId)
+	return &pb.CheckGuestHasReservationForAccommodationResponse{HasReservation: hasReservation}, nil
+}
+
 func convertHexToObjectIDs(hexIDs []string) ([]primitive.ObjectID, error) {
 	var objectIDs []primitive.ObjectID
 

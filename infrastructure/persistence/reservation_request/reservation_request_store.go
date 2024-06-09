@@ -271,3 +271,29 @@ func (store *ReservationRequestMongoDBStore) GetByClientIdAndTimeAndSearch(guest
 	}
 	return decodeReservationRequests(cursor)
 }
+
+func (store *ReservationRequestMongoDBStore) GetByClientIdAndHostId(clientId primitive.ObjectID, hostId primitive.ObjectID) ([]*domain.ReservationRequest, error) {
+	filter := bson.M{
+		"user_id": clientId,
+		"host_id": hostId,
+	}
+
+	cursor, err := store.reservationRequestCollection.Find(context.TODO(), filter)
+	if err != nil {
+		return nil, err
+	}
+	return decodeReservationRequests(cursor)
+}
+
+func (store *ReservationRequestMongoDBStore) GetByClientIdAndAccommodationId(reviewerId primitive.ObjectID, accommodationId primitive.ObjectID) ([]*domain.ReservationRequest, error) {
+	filter := bson.M{
+		"user_id":          reviewerId,
+		"accommodation_id": accommodationId,
+	}
+
+	cursor, err := store.reservationRequestCollection.Find(context.TODO(), filter)
+	if err != nil {
+		return nil, err
+	}
+	return decodeReservationRequests(cursor)
+}

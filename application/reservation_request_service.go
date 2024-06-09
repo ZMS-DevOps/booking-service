@@ -237,3 +237,19 @@ func (service *ReservationRequestService) produceNotification(topic string, rece
 
 	service.producer.Flush(4 * 1000)
 }
+
+func (service *ReservationRequestService) CheckGuestHasReservationForHost(reviewerId primitive.ObjectID, hostId primitive.ObjectID) bool {
+	requests, err := service.store.GetByClientIdAndHostId(reviewerId, hostId)
+	if err != nil {
+		return false
+	}
+	return requests != nil && len(requests) > 0
+}
+
+func (service *ReservationRequestService) CheckGuestHasReservationForAccommodation(reviewerId primitive.ObjectID, accommodationId primitive.ObjectID) bool {
+	requests, err := service.store.GetByClientIdAndAccommodationId(reviewerId, accommodationId)
+	if err != nil {
+		return false
+	}
+	return requests != nil && len(requests) > 0
+}

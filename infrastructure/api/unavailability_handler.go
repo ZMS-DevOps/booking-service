@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/ZMS-DevOps/booking-service/application"
+	"github.com/ZMS-DevOps/booking-service/domain"
 	"github.com/ZMS-DevOps/booking-service/infrastructure/dto"
 	"github.com/gorilla/mux"
 	"go.mongodb.org/mongo-driver/bson/primitive"
