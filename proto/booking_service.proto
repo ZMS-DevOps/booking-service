@@ -6,21 +6,25 @@ package booking;
 
 service BookingService{
   rpc AddUnavailability(AddUnavailabilityRequest) returns(AddUnavailabilityResponse) {}
-  rpc UpdateReviewReservationRequestAutomatically(UpdateReviewReservationRequestAutomaticallyRequest) returns(UpdateReviewReservationRequestAutomaticallyResponse) {}
+  rpc EditAccommodation(EditAccommodationRequest) returns(EditAccommodationResponse) {}
   rpc FilterAvailableAccommodation(FilterAvailableAccommodationRequest) returns(FilterAvailableAccommodationResponse) {}
 }
 
-message UpdateReviewReservationRequestAutomaticallyRequest {
+message EditAccommodationRequest {
   string id = 1;
-  bool automatically = 2;
+  string accommodation_name = 2;
+  bool automatically = 3;
+  string host_id = 4;
 }
 
-message UpdateReviewReservationRequestAutomaticallyResponse {
+message EditAccommodationResponse {
 }
 
 message AddUnavailabilityRequest {
   string id = 1;
-  bool automatically = 2;
+  string accommodation_name = 2;
+  bool automatically = 3;
+  string host_id = 4;
 }
 
 message AddUnavailabilityResponse {

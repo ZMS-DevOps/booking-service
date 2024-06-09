@@ -12,4 +12,5 @@ type UnavailabilityStore interface {
 	GetUnavailabilityPeriods(id primitive.ObjectID) ([]UnavailabilityPeriod, error)
 	UpdateUnavailabilityPeriods(unavailabilityId primitive.ObjectID, periods []UnavailabilityPeriod) error
 	GetByAccommodationId(accommodationId primitive.ObjectID) (*Unavailability, error)
+	GetByHostId(id primitive.ObjectID) ([]*Unavailability, error)
 }

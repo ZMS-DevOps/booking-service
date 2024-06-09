@@ -130,6 +130,11 @@ func (store *UnavailabilityMongoDBStore) GetByAccommodationId(accommodationId pr
 	return &unavailability, nil
 }
 
+func (store *UnavailabilityMongoDBStore) GetByHostId(accommodationId primitive.ObjectID) ([]*domain.Unavailability, error) {
+	filter := bson.M{"host_id": accommodationId}
+	return store.filter(filter)
+}
+
 func (store *UnavailabilityMongoDBStore) Update(id primitive.ObjectID, unavailability *domain.Unavailability) error {
 	filter := bson.M{"_id": id}
 

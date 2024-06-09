@@ -17,7 +17,7 @@ func NewUnavailabilityService(store domain.UnavailabilityStore) *UnavailabilityS
 	}
 }
 
-func (service *UnavailabilityService) AddUnavailability(accommodationId primitive.ObjectID, automatically bool) error {
+func (service *UnavailabilityService) AddUnavailability(accommodationId primitive.ObjectID, accommodationName string, automatically bool, hostIdString string) error {
 	unavailability, err := service.store.GetByAccommodationId(accommodationId)
 	if err != nil {
 		return err
@@ -27,10 +27,17 @@ func (service *UnavailabilityService) AddUnavailability(accommodationId primitiv
 		return fmt.Errorf("unavailability already exists for unavailability ID: %s", accommodationId.Hex())
 	}
 
+	hostId, err := primitive.ObjectIDFromHex(hostIdString)
+	if err != nil {
+		return fmt.Errorf("host ID: %s is not valid", hostIdString)
+	}
+
 	newUnavailability := &domain.Unavailability{
 		Id:                                    primitive.NewObjectID(),
 		AccommodationId:                       accommodationId,
+		AccommodationName:                     accommodationName,
 		UnavailabilityPeriods:                 []domain.UnavailabilityPeriod{},
+		HostId:                                hostId,
 		ReviewReservationRequestAutomatically: automatically,
 	}
 
@@ -41,13 +48,20 @@ func (service *UnavailabilityService) AddUnavailability(accommodationId primitiv
 	return nil
 }
 
-func (service *UnavailabilityService) UpdateUnavailability(accommodationId primitive.ObjectID, automatically bool) error {
+func (service *UnavailabilityService) UpdateUnavailability(accommodationId primitive.ObjectID, accommodationName string, automatically bool, hostIdString string) error {
 	unavailability, err := service.store.GetByAccommodationId(accommodationId)
 	if err != nil {
 		return err
 	}
 
+	hostId, err := primitive.ObjectIDFromHex(hostIdString)
+	if err != nil {
+		return fmt.Errorf("host ID: %s is not valid", hostIdString)
+	}
+
 	unavailability.ReviewReservationRequestAutomatically = automatically
+	unavailability.AccommodationName = accommodationName
+	unavailability.HostId = hostId
 
 	if err := service.store.Update(unavailability.Id, unavailability); err != nil {
 		return err
@@ -94,6 +108,10 @@ func (service *UnavailabilityService) Get(id primitive.ObjectID) (*domain.Unavai
 
 func (service *UnavailabilityService) GetByAccommodationId(id primitive.ObjectID) (*domain.Unavailability, error) {
 	return service.store.GetByAccommodationId(id)
+}
+
+func (service *UnavailabilityService) GetByHostId(id primitive.ObjectID) ([]*domain.Unavailability, error) {
+	return service.store.GetByHostId(id)
 }
 
 func (service *UnavailabilityService) FilterAvailable(ids []primitive.ObjectID, startDate time.Time, endDate time.Time) ([]primitive.ObjectID, error) {
