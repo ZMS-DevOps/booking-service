@@ -212,7 +212,6 @@ func (service *ReservationRequestService) GetFilteredRequests(userId primitive.O
 }
 
 func isReservationInFuture(reservationRequest *domain.ReservationRequest) bool {
-
 	today := time.Now()
 	if !today.Before(reservationRequest.Start.AddDate(0, 0, -1)) {
 		return false

@@ -169,26 +169,6 @@ var unavailabilities = []*domain.Unavailability{
 		UnavailabilityPeriods:                 []domain.UnavailabilityPeriod{},
 		ReviewReservationRequestAutomatically: true,
 	},
-	{
-		Id:                getObjectId("2743a56c9dea1760db469b7b"),
-		AccommodationId:   getObjectId("7743a56c9dea1760db469b7b"),
-		AccommodationName: "Other accommodation name",
-		HostId:            getObjectId("2243a56c9dea1760db469b7b"),
-		UnavailabilityPeriods: []domain.UnavailabilityPeriod{
-			{
-				Id:     getObjectId("3743a56c9dea1760db469b7b"),
-				Start:  time.Now(),
-				End:    time.Now().Add(24 * time.Hour),
-				Reason: domain.Reserved,
-			},
-			{
-				Id:     getObjectId("4743a56c9dea1760db469b7b"),
-				Start:  time.Now().Add(25 * time.Hour),
-				End:    time.Now().Add(49 * time.Hour),
-				Reason: domain.OwnerSet,
-			},
-		},
-	},
 }
 
 func getObjectId(id string) primitive.ObjectID {
