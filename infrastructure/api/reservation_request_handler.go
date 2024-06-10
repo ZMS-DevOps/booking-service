@@ -168,12 +168,7 @@ func (handler *ReservationRequestHandler) DeclineReservation(w http.ResponseWrit
 
 func (handler *ReservationRequestHandler) GetByClient(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	userId, err := primitive.ObjectIDFromHex(vars["id"])
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
+	userId := vars["id"]
 	requests, err := handler.service.GetByClientId(userId, nil)
 
 	if err != nil {
@@ -198,12 +193,7 @@ func (handler *ReservationRequestHandler) GetByClient(w http.ResponseWriter, r *
 
 func (handler *ReservationRequestHandler) GetFilteredRequests(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	userId, err := primitive.ObjectIDFromHex(vars["id"])
-	if err != nil {
-		handleError(w, http.StatusBadRequest, "Invalid user ID")
-		return
-	}
-
+	userId := vars["id"]
 	userType := r.URL.Query().Get("user-type")
 	if userType != "host" && userType != "guest" {
 		handleError(w, http.StatusBadRequest, "Invalid user type")

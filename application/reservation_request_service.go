@@ -42,9 +42,9 @@ func (service *ReservationRequestService) AddReservationRequest(reservationReque
 
 	if isAutomatic {
 		err = service.ApproveRequest(*requestId)
-		service.produceNotification("reservation-request.created", reservationRequest.HostId.Hex(), reservationRequest.Id.Hex(), "automatic")
+		service.produceNotification("reservation-request.created", reservationRequest.HostId, reservationRequest.Id.Hex(), "automatic")
 	} else {
-		service.produceNotification("reservation-request.created", reservationRequest.HostId.Hex(), reservationRequest.Id.Hex(), "")
+		service.produceNotification("reservation-request.created", reservationRequest.HostId, reservationRequest.Id.Hex(), "")
 	}
 
 	if err != nil {
@@ -80,7 +80,7 @@ func (service *ReservationRequestService) ApproveRequest(id primitive.ObjectID) 
 	if err != nil {
 		return err
 	}
-	service.produceNotification("host-reviewed-reservation-request", reservationRequest.UserId.Hex(), reservationRequest.Id.Hex(), "accept-request")
+	service.produceNotification("host-reviewed-reservation-request", reservationRequest.UserId, reservationRequest.Id.Hex(), "accept-request")
 	return nil
 }
 
@@ -98,7 +98,7 @@ func (service *ReservationRequestService) DeclineRequest(id primitive.ObjectID) 
 	if err != nil {
 		return err
 	}
-	service.produceNotification("host-reviewed-reservation-request", reservationRequest.UserId.Hex(), reservationRequest.Id.Hex(), "decline-request")
+	service.produceNotification("host-reviewed-reservation-request", reservationRequest.UserId, reservationRequest.Id.Hex(), "decline-request")
 	return nil
 }
 
@@ -153,12 +153,12 @@ func (service *ReservationRequestService) DeclineReservation(id primitive.Object
 		return err
 	}
 
-	service.produceNotification("reservation.canceled", reservationRequest.HostId.Hex(), reservationRequest.Id.Hex(), "canceled")
+	service.produceNotification("reservation.canceled", reservationRequest.HostId, reservationRequest.Id.Hex(), "canceled")
 
 	return nil
 }
 
-func (service *ReservationRequestService) DeleteClient(clientId primitive.ObjectID) bool {
+func (service *ReservationRequestService) DeleteClient(clientId string) bool {
 	reservationRequests, err := service.store.GetByClientId(clientId)
 	if err != nil {
 		return false
@@ -177,7 +177,7 @@ func (service *ReservationRequestService) DeleteClient(clientId primitive.Object
 	return true
 }
 
-func (service *ReservationRequestService) GetByClientId(clientId primitive.ObjectID, status *domain.ReservationRequestStatus) ([]*domain.ReservationRequest, error) {
+func (service *ReservationRequestService) GetByClientId(clientId string, status *domain.ReservationRequestStatus) ([]*domain.ReservationRequest, error) {
 	if status != nil {
 		return service.store.GetByClientIdAndStatus(clientId, *status)
 	} else {
@@ -186,7 +186,7 @@ func (service *ReservationRequestService) GetByClientId(clientId primitive.Objec
 
 }
 
-func (service *ReservationRequestService) GetNumberOfCanceled(clientId primitive.ObjectID) int {
+func (service *ReservationRequestService) GetNumberOfCanceled(clientId string) int {
 	declinedRequests, err := service.store.GetByClientIdAndStatus(clientId, domain.DeclinedByUser)
 	if err != nil {
 		return 0
@@ -194,7 +194,7 @@ func (service *ReservationRequestService) GetNumberOfCanceled(clientId primitive
 	return len(declinedRequests)
 }
 
-func (service *ReservationRequestService) GetFilteredRequests(userId primitive.ObjectID, userType string, past bool, search string) ([]*domain.ReservationRequest, error) {
+func (service *ReservationRequestService) GetFilteredRequests(userId string, userType string, past bool, search string) ([]*domain.ReservationRequest, error) {
 	var requests []*domain.ReservationRequest
 	var err error
 
@@ -238,7 +238,7 @@ func (service *ReservationRequestService) produceNotification(topic string, rece
 	service.producer.Flush(4 * 1000)
 }
 
-func (service *ReservationRequestService) CheckGuestHasReservationForHost(reviewerId primitive.ObjectID, hostId primitive.ObjectID) bool {
+func (service *ReservationRequestService) CheckGuestHasReservationForHost(reviewerId string, hostId string) bool {
 	requests, err := service.store.GetByClientIdAndHostId(reviewerId, hostId)
 	if err != nil {
 		return false
@@ -246,7 +246,7 @@ func (service *ReservationRequestService) CheckGuestHasReservationForHost(review
 	return requests != nil && len(requests) > 0
 }
 
-func (service *ReservationRequestService) CheckGuestHasReservationForAccommodation(reviewerId primitive.ObjectID, accommodationId primitive.ObjectID) bool {
+func (service *ReservationRequestService) CheckGuestHasReservationForAccommodation(reviewerId string, accommodationId primitive.ObjectID) bool {
 	requests, err := service.store.GetByClientIdAndAccommodationId(reviewerId, accommodationId)
 	if err != nil {
 		return false

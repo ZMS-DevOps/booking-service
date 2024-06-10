@@ -150,7 +150,7 @@ func (store *ReservationRequestMongoDBStore) Delete(id primitive.ObjectID) error
 	return nil
 }
 
-func (store *ReservationRequestMongoDBStore) DeleteByHost(id primitive.ObjectID) error {
+func (store *ReservationRequestMongoDBStore) DeleteByHost(id string) error {
 	filter := bson.M{"host_id": id}
 	_, err := store.reservationRequestCollection.DeleteMany(context.TODO(), filter)
 	if err != nil {
@@ -203,12 +203,12 @@ func (store *ReservationRequestMongoDBStore) CancelOverlappingPendingRequests(re
 	return nil
 }
 
-func (store *ReservationRequestMongoDBStore) GetByClientId(clientId primitive.ObjectID) ([]*domain.ReservationRequest, error) {
+func (store *ReservationRequestMongoDBStore) GetByClientId(clientId string) ([]*domain.ReservationRequest, error) {
 	filter := bson.M{"user_id": clientId}
 	return store.filter(filter)
 }
 
-func (store *ReservationRequestMongoDBStore) GetByClientIdAndStatus(userId primitive.ObjectID, status domain.ReservationRequestStatus) ([]*domain.ReservationRequest, error) {
+func (store *ReservationRequestMongoDBStore) GetByClientIdAndStatus(userId string, status domain.ReservationRequestStatus) ([]*domain.ReservationRequest, error) {
 	filter := bson.M{
 		"user_id": userId,
 		"status":  status,
@@ -216,7 +216,7 @@ func (store *ReservationRequestMongoDBStore) GetByClientIdAndStatus(userId primi
 	return store.filter(filter)
 }
 
-func (store *ReservationRequestMongoDBStore) GetByHostAndTimeAndSearch(hostId primitive.ObjectID, past bool, search string) ([]*domain.ReservationRequest, error) {
+func (store *ReservationRequestMongoDBStore) GetByHostAndTimeAndSearch(hostId string, past bool, search string) ([]*domain.ReservationRequest, error) {
 	filter := bson.M{
 		"host_id": hostId,
 	}
@@ -252,7 +252,7 @@ func (store *ReservationRequestMongoDBStore) searchByString(search string, filte
 	}
 }
 
-func (store *ReservationRequestMongoDBStore) GetByClientIdAndTimeAndSearch(guestId primitive.ObjectID, past bool, search string) ([]*domain.ReservationRequest, error) {
+func (store *ReservationRequestMongoDBStore) GetByClientIdAndTimeAndSearch(guestId string, past bool, search string) ([]*domain.ReservationRequest, error) {
 	filter := bson.M{
 		"user_id": guestId,
 	}
@@ -272,7 +272,7 @@ func (store *ReservationRequestMongoDBStore) GetByClientIdAndTimeAndSearch(guest
 	return decodeReservationRequests(cursor)
 }
 
-func (store *ReservationRequestMongoDBStore) GetByClientIdAndHostId(clientId primitive.ObjectID, hostId primitive.ObjectID) ([]*domain.ReservationRequest, error) {
+func (store *ReservationRequestMongoDBStore) GetByClientIdAndHostId(clientId string, hostId string) ([]*domain.ReservationRequest, error) {
 	filter := bson.M{
 		"user_id": clientId,
 		"host_id": hostId,
@@ -285,7 +285,7 @@ func (store *ReservationRequestMongoDBStore) GetByClientIdAndHostId(clientId pri
 	return decodeReservationRequests(cursor)
 }
 
-func (store *ReservationRequestMongoDBStore) GetByClientIdAndAccommodationId(reviewerId primitive.ObjectID, accommodationId primitive.ObjectID) ([]*domain.ReservationRequest, error) {
+func (store *ReservationRequestMongoDBStore) GetByClientIdAndAccommodationId(reviewerId string, accommodationId primitive.ObjectID) ([]*domain.ReservationRequest, error) {
 	filter := bson.M{
 		"user_id":          reviewerId,
 		"accommodation_id": accommodationId,

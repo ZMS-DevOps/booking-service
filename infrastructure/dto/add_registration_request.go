@@ -10,8 +10,8 @@ import (
 type AddReservationRequestDto struct {
 	AccommodationId   primitive.ObjectID `bson:"accommodation_id"`
 	AccommodationName string             `bson:"accommodation_name"`
-	HostId            primitive.ObjectID `bson:"host_id"`
-	UserId            primitive.ObjectID `bson:"user_id"`
+	HostId            string             `bson:"host_id"`
+	UserId            string             `bson:"user_id"`
 	Start             time.Time          `bson:"start"`
 	End               time.Time          `bson:"end"`
 	NumberOfGuests    int                `bson:"number_of_guests"`

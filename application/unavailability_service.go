@@ -25,7 +25,7 @@ func NewUnavailabilityService(store domain.UnavailabilityStore, producer *kafka.
 	}
 }
 
-func (service *UnavailabilityService) AddUnavailability(accommodationId primitive.ObjectID, accommodationName string, automatically bool, hostIdString string) error {
+func (service *UnavailabilityService) AddUnavailability(accommodationId primitive.ObjectID, accommodationName string, automatically bool, hostId string) error {
 	unavailability, err := service.store.GetByAccommodationId(accommodationId)
 	if err != nil {
 		return err
@@ -33,11 +33,6 @@ func (service *UnavailabilityService) AddUnavailability(accommodationId primitiv
 
 	if unavailability != nil {
 		return fmt.Errorf("unavailability already exists for unavailability ID: %s", accommodationId.Hex())
-	}
-
-	hostId, err := primitive.ObjectIDFromHex(hostIdString)
-	if err != nil {
-		return fmt.Errorf("host ID: %s is not valid", hostIdString)
 	}
 
 	newUnavailability := &domain.Unavailability{
@@ -56,15 +51,10 @@ func (service *UnavailabilityService) AddUnavailability(accommodationId primitiv
 	return nil
 }
 
-func (service *UnavailabilityService) UpdateUnavailability(accommodationId primitive.ObjectID, accommodationName string, automatically bool, hostIdString string) error {
+func (service *UnavailabilityService) UpdateUnavailability(accommodationId primitive.ObjectID, accommodationName string, automatically bool, hostId string) error {
 	unavailability, err := service.store.GetByAccommodationId(accommodationId)
 	if err != nil {
 		return err
-	}
-
-	hostId, err := primitive.ObjectIDFromHex(hostIdString)
-	if err != nil {
-		return fmt.Errorf("host ID: %s is not valid", hostIdString)
 	}
 
 	unavailability.ReviewReservationRequestAutomatically = automatically
@@ -118,19 +108,14 @@ func (service *UnavailabilityService) GetByAccommodationId(id primitive.ObjectID
 	return service.store.GetByAccommodationId(id)
 }
 
-func (service *UnavailabilityService) GetByHostId(id primitive.ObjectID) ([]*domain.Unavailability, error) {
+func (service *UnavailabilityService) GetByHostId(id string) ([]*domain.Unavailability, error) {
 	return service.store.GetByHostId(id)
 }
 
 func (service *UnavailabilityService) FilterAvailable(ids []primitive.ObjectID, startDate time.Time, endDate time.Time) ([]primitive.ObjectID, error) {
 	var response []primitive.ObjectID
-	fmt.Println(ids)
-	fmt.Println(startDate)
-	fmt.Println(endDate)
 	for _, id := range ids {
 		unavailability, err := service.store.GetByAccommodationId(id)
-		fmt.Println(err)
-		fmt.Println(unavailability)
 		if err != nil {
 			return nil, err
 		}
@@ -153,7 +138,7 @@ func (service *UnavailabilityService) FilterAvailable(ids []primitive.ObjectID, 
 	return response, nil
 }
 
-func (service *UnavailabilityService) DeleteHost(hostId primitive.ObjectID) (bool, error) {
+func (service *UnavailabilityService) DeleteHost(hostId string) (bool, error) {
 	unavailabilityList, err := service.store.GetByHostId(hostId)
 	if err != nil {
 		return false, err
@@ -192,11 +177,11 @@ func periodsOverlap(start1, end1, start2, end2 time.Time) bool {
 		start1.Before(start2) && end1.After(start2)
 }
 
-func (service *UnavailabilityService) produceDeleteAccommodationNotification(hostId primitive.ObjectID) {
+func (service *UnavailabilityService) produceDeleteAccommodationNotification(hostId string) {
 	var topic = "accommodation.delete"
 
 	notificationDTO := dto.AccommodationDeleteNotification{
-		Id: hostId.Hex(),
+		Id: hostId,
 	}
 	message, _ := json.Marshal(notificationDTO)
 	err := service.producer.Produce(&kafka.Message{
