@@ -12,9 +12,11 @@ type ReservationRequestStore interface {
 	GetByAccommodationIdAndType(id primitive.ObjectID, requestType ReservationRequestStatus) ([]*ReservationRequest, error)
 	Delete(id primitive.ObjectID) error
 	CancelOverlappingPendingRequests(request *ReservationRequest) error
-	GetByClientId(clientId primitive.ObjectID) ([]*ReservationRequest, error)
-	GetByClientIdAndStatus(clientId primitive.ObjectID, status ReservationRequestStatus) ([]*ReservationRequest, error)
-	GetByHostAndTimeAndSearch(id primitive.ObjectID, past bool, search string) ([]*ReservationRequest, error)
-	GetByClientIdAndTimeAndSearch(guestId primitive.ObjectID, past bool, search string) ([]*ReservationRequest, error)
-	DeleteByHost(hostId primitive.ObjectID) error
+	GetByClientId(clientId string) ([]*ReservationRequest, error)
+	GetByClientIdAndStatus(clientId string, status ReservationRequestStatus) ([]*ReservationRequest, error)
+	GetByHostAndTimeAndSearch(userId string, past bool, search string) ([]*ReservationRequest, error)
+	GetByClientIdAndTimeAndSearch(guestId string, past bool, search string) ([]*ReservationRequest, error)
+	DeleteByHost(hostId string) error
+	GetByClientIdAndHostId(reviewerId string, hostId string) ([]*ReservationRequest, error)
+	GetByClientIdAndAccommodationId(reviewerId string, accommodationId primitive.ObjectID) ([]*ReservationRequest, error)
 }

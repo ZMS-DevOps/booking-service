@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/ZMS-DevOps/booking-service/application"
+	"github.com/ZMS-DevOps/booking-service/domain"
 	"github.com/ZMS-DevOps/booking-service/infrastructure/dto"
 	"github.com/gorilla/mux"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -148,13 +149,8 @@ func (handler *UnavailabilityHandler) GetByAccommodationId(w http.ResponseWriter
 
 func (handler *UnavailabilityHandler) GetByHostId(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	accommodationId, err := primitive.ObjectIDFromHex(vars["id"])
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	unavailabilityList, err := handler.service.GetByHostId(accommodationId)
+	hostId := vars["id"]
+	unavailabilityList, err := handler.service.GetByHostId(hostId)
 
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)

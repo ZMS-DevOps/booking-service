@@ -24,11 +24,11 @@ func NewBookingHandler(unavailabilityService *application.UnavailabilityService,
 
 func (handler *BookingHandler) AddUnavailability(ctx context.Context, request *pb.AddUnavailabilityRequest) (*pb.AddUnavailabilityResponse, error) {
 	id := request.Id
-	objectId, err := primitive.ObjectIDFromHex(id)
+	accommodationId, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return nil, err
 	}
-	if err := handler.unavailabilityService.AddUnavailability(objectId, request.AccommodationName, request.Automatically, request.HostId); err != nil {
+	if err := handler.unavailabilityService.AddUnavailability(accommodationId, request.AccommodationName, request.Automatically, request.HostId); err != nil {
 		return nil, err
 	}
 	return &pb.AddUnavailabilityResponse{}, nil
@@ -36,11 +36,11 @@ func (handler *BookingHandler) AddUnavailability(ctx context.Context, request *p
 
 func (handler *BookingHandler) EditAccommodation(ctx context.Context, request *pb.EditAccommodationRequest) (*pb.EditAccommodationResponse, error) {
 	id := request.Id
-	objectId, err := primitive.ObjectIDFromHex(id)
+	accommodationId, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return nil, err
 	}
-	if err := handler.unavailabilityService.UpdateUnavailability(objectId, request.AccommodationName, request.Automatically, request.HostId); err != nil {
+	if err := handler.unavailabilityService.UpdateUnavailability(accommodationId, request.AccommodationName, request.Automatically, request.HostId); err != nil {
 		return nil, err
 	}
 	return &pb.EditAccommodationResponse{}, nil
@@ -71,11 +71,7 @@ func (handler *BookingHandler) FilterAvailableAccommodation(ctx context.Context,
 }
 
 func (handler *BookingHandler) CheckDeleteHost(ctx context.Context, request *pb.CheckDeleteHostRequest) (*pb.CheckDeleteHostResponse, error) {
-	hostId, err := primitive.ObjectIDFromHex(request.HostId)
-	if err != nil {
-		return nil, err
-	}
-
+	hostId := request.HostId
 	success, err := handler.unavailabilityService.DeleteHost(hostId)
 	if err != nil {
 		return nil, err
@@ -84,12 +80,27 @@ func (handler *BookingHandler) CheckDeleteHost(ctx context.Context, request *pb.
 }
 
 func (handler *BookingHandler) CheckDeleteClient(ctx context.Context, request *pb.CheckDeleteClientRequest) (*pb.CheckDeleteClientResponse, error) {
-	clientId, err := primitive.ObjectIDFromHex(request.HostId)
+	clientId := request.HostId
+	success := handler.reservationRequestService.DeleteClient(clientId)
+	return &pb.CheckDeleteClientResponse{Success: success}, nil
+}
+
+func (handler *BookingHandler) CheckGuestHasReservationForHost(ctx context.Context, request *pb.CheckGuestHasReservationForHostRequest) (*pb.CheckGuestHasReservationForHostResponse, error) {
+	reviewerId := request.ReviewerId
+	hostId := request.HostId
+	hasReservation := handler.reservationRequestService.CheckGuestHasReservationForHost(reviewerId, hostId)
+	return &pb.CheckGuestHasReservationForHostResponse{HasReservation: hasReservation}, nil
+}
+
+func (handler *BookingHandler) CheckGuestHasReservationForAccommodation(ctx context.Context, request *pb.CheckGuestHasReservationForAccommodationRequest) (*pb.CheckGuestHasReservationForAccommodationResponse, error) {
+	reviewerId := request.ReviewerId
+
+	accommodationId, err := primitive.ObjectIDFromHex(request.AccommodationId)
 	if err != nil {
 		return nil, err
 	}
-	success := handler.reservationRequestService.DeleteClient(clientId)
-	return &pb.CheckDeleteClientResponse{Success: success}, nil
+	hasReservation := handler.reservationRequestService.CheckGuestHasReservationForAccommodation(reviewerId, accommodationId)
+	return &pb.CheckGuestHasReservationForAccommodationResponse{HasReservation: hasReservation}, nil
 }
 
 func convertHexToObjectIDs(hexIDs []string) ([]primitive.ObjectID, error) {
