@@ -29,6 +29,7 @@ type BookingServiceClient interface {
 	CheckDeleteClient(ctx context.Context, in *CheckDeleteClientRequest, opts ...grpc.CallOption) (*CheckDeleteClientResponse, error)
 	CheckGuestHasReservationForHost(ctx context.Context, in *CheckGuestHasReservationForHostRequest, opts ...grpc.CallOption) (*CheckGuestHasReservationForHostResponse, error)
 	CheckGuestHasReservationForAccommodation(ctx context.Context, in *CheckGuestHasReservationForAccommodationRequest, opts ...grpc.CallOption) (*CheckGuestHasReservationForAccommodationResponse, error)
+	CheckAccommodationHasReservation(ctx context.Context, in *CheckAccommodationHasReservationRequest, opts ...grpc.CallOption) (*CheckAccommodationHasReservationResponse, error)
 }
 
 type bookingServiceClient struct {
@@ -102,6 +103,15 @@ func (c *bookingServiceClient) CheckGuestHasReservationForAccommodation(ctx cont
 	return out, nil
 }
 
+func (c *bookingServiceClient) CheckAccommodationHasReservation(ctx context.Context, in *CheckAccommodationHasReservationRequest, opts ...grpc.CallOption) (*CheckAccommodationHasReservationResponse, error) {
+	out := new(CheckAccommodationHasReservationResponse)
+	err := c.cc.Invoke(ctx, "/booking.BookingService/CheckAccommodationHasReservation", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // BookingServiceServer is the server API for BookingService service.
 // All implementations must embed UnimplementedBookingServiceServer
 // for forward compatibility
@@ -113,6 +123,7 @@ type BookingServiceServer interface {
 	CheckDeleteClient(context.Context, *CheckDeleteClientRequest) (*CheckDeleteClientResponse, error)
 	CheckGuestHasReservationForHost(context.Context, *CheckGuestHasReservationForHostRequest) (*CheckGuestHasReservationForHostResponse, error)
 	CheckGuestHasReservationForAccommodation(context.Context, *CheckGuestHasReservationForAccommodationRequest) (*CheckGuestHasReservationForAccommodationResponse, error)
+	CheckAccommodationHasReservation(context.Context, *CheckAccommodationHasReservationRequest) (*CheckAccommodationHasReservationResponse, error)
 	mustEmbedUnimplementedBookingServiceServer()
 }
 
@@ -140,6 +151,9 @@ func (UnimplementedBookingServiceServer) CheckGuestHasReservationForHost(context
 }
 func (UnimplementedBookingServiceServer) CheckGuestHasReservationForAccommodation(context.Context, *CheckGuestHasReservationForAccommodationRequest) (*CheckGuestHasReservationForAccommodationResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CheckGuestHasReservationForAccommodation not implemented")
+}
+func (UnimplementedBookingServiceServer) CheckAccommodationHasReservation(context.Context, *CheckAccommodationHasReservationRequest) (*CheckAccommodationHasReservationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CheckAccommodationHasReservation not implemented")
 }
 func (UnimplementedBookingServiceServer) mustEmbedUnimplementedBookingServiceServer() {}
 
@@ -280,6 +294,24 @@ func _BookingService_CheckGuestHasReservationForAccommodation_Handler(srv interf
 	return interceptor(ctx, in, info, handler)
 }
 
+func _BookingService_CheckAccommodationHasReservation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CheckAccommodationHasReservationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BookingServiceServer).CheckAccommodationHasReservation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/booking.BookingService/CheckAccommodationHasReservation",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BookingServiceServer).CheckAccommodationHasReservation(ctx, req.(*CheckAccommodationHasReservationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // BookingService_ServiceDesc is the grpc.ServiceDesc for BookingService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -314,6 +346,10 @@ var BookingService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CheckGuestHasReservationForAccommodation",
 			Handler:    _BookingService_CheckGuestHasReservationForAccommodation_Handler,
+		},
+		{
+			MethodName: "CheckAccommodationHasReservation",
+			Handler:    _BookingService_CheckAccommodationHasReservation_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

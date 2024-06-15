@@ -160,11 +160,12 @@ func (service *UnavailabilityService) DeleteHost(hostId string) (bool, error) {
 }
 
 func (service *UnavailabilityService) IsAutomatic(accommodationId primitive.ObjectID) (bool, error) {
-	var unavailability, err = service.store.GetByAccommodationId(accommodationId)
+	var accommodation, err = service.store.GetByAccommodationId(accommodationId)
+	log.Printf("accommodation: %v", accommodation)
 	if err != nil {
 		return false, err
 	}
-	return unavailability.ReviewReservationRequestAutomatically, nil
+	return accommodation.ReviewReservationRequestAutomatically, nil
 }
 
 func isFuturePeriod(period domain.UnavailabilityPeriod) bool {

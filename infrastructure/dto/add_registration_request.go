@@ -8,14 +8,14 @@ import (
 )
 
 type AddReservationRequestDto struct {
-	AccommodationId   primitive.ObjectID `bson:"accommodation_id"`
-	AccommodationName string             `bson:"accommodation_name"`
-	HostId            string             `bson:"host_id"`
-	UserId            string             `bson:"user_id"`
-	Start             time.Time          `bson:"start"`
-	End               time.Time          `bson:"end"`
-	NumberOfGuests    int                `bson:"number_of_guests"`
-	PriceTotal        float32            `bson:"price_total"`
+	AccommodationId   primitive.ObjectID `json:"accommodation_id"`
+	AccommodationName string             `json:"accommodation_name"`
+	HostId            string             `json:"host_id"`
+	UserId            string             `json:"user_id"`
+	Start             time.Time          `json:"start"`
+	End               time.Time          `json:"end"`
+	NumberOfGuests    int                `json:"number_of_guests"`
+	PriceTotal        float32            `json:"price_total"`
 }
 
 func ValidateAddRegistrationRequestDto(dto AddReservationRequestDto) error {

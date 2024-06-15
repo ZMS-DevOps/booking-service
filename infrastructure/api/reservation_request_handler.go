@@ -7,6 +7,7 @@ import (
 	"github.com/ZMS-DevOps/booking-service/infrastructure/dto"
 	"github.com/gorilla/mux"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"log"
 	"net/http"
 )
 
@@ -23,7 +24,6 @@ func NewReservationRequestHandler(service *application.ReservationRequestService
 
 func (handler *ReservationRequestHandler) Init(router *mux.Router) {
 	router.HandleFunc("/booking/request", handler.AddRequest).Methods("POST")
-	router.HandleFunc("/booking/request/user/{id}", handler.GetByClient).Methods("GET")
 	router.HandleFunc("/booking/request/{id}", handler.GetAll).Methods("GET")
 	router.HandleFunc("/booking/request/{id}/approve", handler.Approve).Methods("PUT")
 	router.HandleFunc("/booking/request/{id}/decline", handler.Decline).Methods("PUT")
@@ -38,13 +38,17 @@ func (handler *ReservationRequestHandler) AddRequest(w http.ResponseWriter, r *h
 		handleError(w, http.StatusBadRequest, "Invalid request payload")
 		return
 	}
+	log.Printf("prvi print")
+	log.Printf("adddto print %v", addReservationRequestDto.AccommodationId)
 
 	if err := dto.ValidateAddRegistrationRequestDto(addReservationRequestDto); err != nil {
 		handleError(w, http.StatusBadRequest, err.Error())
 		return
 	}
+	log.Printf("drugi print")
 
 	newReservationRequest := dto.MapRegistrationRequest(addReservationRequestDto)
+	log.Printf("newReservationRequest print %v", newReservationRequest)
 
 	if err := handler.service.AddReservationRequest(newReservationRequest); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)

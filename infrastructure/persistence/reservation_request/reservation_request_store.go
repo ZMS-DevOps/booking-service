@@ -2,7 +2,6 @@ package reservation_request
 
 import (
 	"context"
-	"fmt"
 	"github.com/ZMS-DevOps/booking-service/domain"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -162,25 +161,9 @@ func (store *ReservationRequestMongoDBStore) DeleteByHost(id string) error {
 func (store *ReservationRequestMongoDBStore) CancelOverlappingPendingRequests(reservationRequest *domain.ReservationRequest) error {
 	filter := bson.M{
 		"accommodation_id": reservationRequest.AccommodationId,
-		"status":           "pending",
-		"$or": []bson.M{
-			{
-				"start": bson.M{
-					"$lt": reservationRequest.End,
-				},
-				"end": bson.M{
-					"$gt": reservationRequest.Start,
-				},
-			},
-			{
-				"start": bson.M{
-					"$lt": reservationRequest.End,
-				},
-				"end": bson.M{
-					"$eq": primitive.Null{},
-				},
-			},
-		},
+		"status":           0,
+		"start":            bson.M{"$lt": reservationRequest.End},
+		"end":              bson.M{"$gt": reservationRequest.Start},
 	}
 
 	update := bson.M{
@@ -195,9 +178,9 @@ func (store *ReservationRequestMongoDBStore) CancelOverlappingPendingRequests(re
 	}
 
 	if updateResult.MatchedCount > 0 {
-		fmt.Printf("Matched %v documents and updated %v documents.\n", updateResult.MatchedCount, updateResult.ModifiedCount)
+		log.Printf("Matched %v documents and updated %v documents.\n", updateResult.MatchedCount, updateResult.ModifiedCount)
 	} else {
-		fmt.Println("No documents matched the query.")
+		log.Printf("No documents matched the query.")
 	}
 
 	return nil

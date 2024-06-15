@@ -117,7 +117,7 @@ Create hotel-user , hotel-admin (password: test)
 ```
 
 
-docker build -t devopszms2024/zms-devops-booking-service:3.20.5 .
-docker push devopszms2024/zms-devops-booking-service:3.20.5
+docker build -t devopszms2024/zms-devops-booking-service:latest .
+docker push devopszms2024/zms-devops-booking-service:latest
 kubectl replace --force -f k8s/
 kubectl replace --force -f istio/
