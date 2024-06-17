@@ -95,10 +95,11 @@ jobs:
         MAJOR_STRING_TOKEN: breaking-change
         MINOR_STRING_TOKEN: feat
         PATCH_STRING_TOKEN: fix
+        REPLACE: true
 
   push-to-registry:
     name: Push Docker image to Docker Hub
-    needs: [semantic-versioning, sonar-cloud]
+    needs: [ semantic-versioning, sonar-cloud ]
     runs-on: ubuntu-latest
 
     steps:
