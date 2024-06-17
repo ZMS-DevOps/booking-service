@@ -24,12 +24,11 @@ func NewReservationRequestHandler(service *application.ReservationRequestService
 
 func (handler *ReservationRequestHandler) Init(router *mux.Router) {
 	router.HandleFunc("/booking/request", handler.AddRequest).Methods("POST")
-	router.HandleFunc("/booking/request/{id}", handler.GetAll).Methods("GET")
-	router.HandleFunc("/booking/request/{id}/approve", handler.Approve).Methods("PUT")
-	router.HandleFunc("/booking/request/{id}/decline", handler.Decline).Methods("PUT")
-	router.HandleFunc("/booking/request/{id}", handler.Delete).Methods("DELETE")
-	router.HandleFunc("/booking/reservation/{id}/decline", handler.DeclineReservation).Methods("PUT")
+	router.HandleFunc("/booking/reservation/decline/{id}", handler.DeclineReservation).Methods("PUT")
 	router.HandleFunc("/booking/request/user/{id}", handler.GetFilteredRequests).Methods("GET")
+	router.HandleFunc("/booking/request/all/{id}", handler.GetAll).Methods("GET")
+	router.HandleFunc("/booking/request/approve/{id}", handler.Approve).Methods("PUT")
+	router.HandleFunc("/booking/request/decline/{id}", handler.Decline).Methods("PUT")
 }
 
 func (handler *ReservationRequestHandler) AddRequest(w http.ResponseWriter, r *http.Request) {
@@ -131,22 +130,6 @@ func (handler *ReservationRequestHandler) Decline(w http.ResponseWriter, r *http
 	}
 
 	if err := handler.service.DeclineRequest(reservationRequestId); err != nil {
-		w.WriteHeader(http.StatusNotFound)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-}
-
-func (handler *ReservationRequestHandler) Delete(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	accommodationId, err := primitive.ObjectIDFromHex(vars["id"])
-	if err != nil {
-		handleError(w, http.StatusBadRequest, err.Error())
-		return
-	}
-
-	if err := handler.service.DeleteRequest(accommodationId); err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}

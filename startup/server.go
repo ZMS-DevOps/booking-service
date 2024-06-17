@@ -71,6 +71,12 @@ func (server *Server) initUnavailabilityStore(client *mongo.Client) domain.Unava
 func (server *Server) initReservationRequestStore(client *mongo.Client) domain.ReservationRequestStore {
 	store := reservation_request.NewReservationRequestMongoDBStore(client)
 	store.DeleteAll()
+	//for _, request := range reservationRequests {
+	//	_, err := store.Insert(request)
+	//	if err != nil {
+	//		log.Fatal(err)
+	//	}
+	//}
 	return store
 }
 

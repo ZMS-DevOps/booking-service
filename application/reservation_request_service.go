@@ -147,13 +147,18 @@ func (service *ReservationRequestService) DeclineReservation(id primitive.Object
 		End:   reservationRequest.End,
 	}
 
-	err = service.unavailabilityService.RemoveUnavailabilityPeriod(reservationRequest.AccommodationId, &unavailabilityPeriod) // todom
+	log.Printf("stigao DeclineReservation")
+	log.Printf("unavailabilityPeriod start %s", unavailabilityPeriod.Start)
+	log.Printf("unavailabilityPeriod end %s", unavailabilityPeriod.End)
+	err = service.unavailabilityService.RemoveUnavailabilityPeriod(reservationRequest.AccommodationId, &unavailabilityPeriod, false)
 	if err != nil {
 		return err
 	}
 
+	log.Printf("stigao do produce")
 	service.produceNotification("reservation.canceled", reservationRequest.HostId, reservationRequest.Id.Hex(), "canceled")
 
+	log.Printf("prosao DeclineReservation")
 	return nil
 }
 
@@ -238,7 +243,7 @@ func (service *ReservationRequestService) produceNotification(topic string, rece
 }
 
 func (service *ReservationRequestService) CheckGuestHasReservationForHost(reviewerId string, hostId string) bool {
-	requests, err := service.store.GetByClientIdAndHostId(reviewerId, hostId)
+	requests, err := service.store.GetPastAcceptedReservationRequestByClientIdAndHostId(reviewerId, hostId)
 	if err != nil {
 		return false
 	}
@@ -270,5 +275,10 @@ func (service *ReservationRequestService) CheckAccommodationHasReservation(accom
 			return false
 		}
 	}
+
+	if err := service.unavailabilityService.DeleteByAccommodationId(accommodationId); err != nil {
+		return false
+	}
+
 	return true
 }

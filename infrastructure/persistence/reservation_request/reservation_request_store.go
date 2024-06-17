@@ -221,16 +221,9 @@ func (store *ReservationRequestMongoDBStore) GetByHostAndTimeAndSearch(hostId st
 
 func (store *ReservationRequestMongoDBStore) searchByString(search string, filter bson.M) {
 	if search != "" {
-		objectId, err := primitive.ObjectIDFromHex(search)
-		idMatch := bson.M{"_id": objectId}
-		if err != nil {
-			idMatch = bson.M{}
-		}
-
 		filter["$or"] = []bson.M{
 			{"accommodation_name": bson.M{"$regex": search, "$options": "i"}},
 			{"status": bson.M{"$regex": search, "$options": "i"}},
-			idMatch,
 		}
 	}
 }
@@ -268,10 +261,14 @@ func (store *ReservationRequestMongoDBStore) GetByClientIdAndHostId(clientId str
 	return decodeReservationRequests(cursor)
 }
 
-func (store *ReservationRequestMongoDBStore) GetByClientIdAndAccommodationId(reviewerId string, accommodationId primitive.ObjectID) ([]*domain.ReservationRequest, error) {
+func (store *ReservationRequestMongoDBStore) GetPastAcceptedReservationRequestByClientIdAndHostId(clientId string, hostId string) ([]*domain.ReservationRequest, error) {
 	filter := bson.M{
-		"user_id":          reviewerId,
-		"accommodation_id": accommodationId,
+		"user_id": clientId,
+		"host_id": hostId,
+		"status":  1,
+		"end": bson.M{
+			"$lt": time.Now(),
+		},
 	}
 
 	cursor, err := store.reservationRequestCollection.Find(context.TODO(), filter)
@@ -279,4 +276,39 @@ func (store *ReservationRequestMongoDBStore) GetByClientIdAndAccommodationId(rev
 		return nil, err
 	}
 	return decodeReservationRequests(cursor)
+}
+
+func (store *ReservationRequestMongoDBStore) GetByClientIdAndAccommodationId(reviewerId string, accommodationId primitive.ObjectID) ([]*domain.ReservationRequest, error) {
+	filter := bson.M{
+		"user_id":          reviewerId,
+		"accommodation_id": accommodationId,
+		"status":           1,
+		"end": bson.M{
+			"$lt": time.Now(),
+		},
+	}
+
+	cursor, err := store.reservationRequestCollection.Find(context.TODO(), filter)
+	if err != nil {
+		return nil, err
+	}
+	return decodeReservationRequests(cursor)
+}
+
+func (store *ReservationRequestMongoDBStore) DeleteByAccommodation(accommodationId primitive.ObjectID) error {
+	filter := bson.M{
+		"status":           0,
+		"accommodation_id": accommodationId,
+	}
+	update := bson.M{
+		"$set": bson.M{
+			"status": domain.DeclinedByHost,
+		},
+	}
+
+	_, err := store.reservationRequestCollection.UpdateMany(context.TODO(), filter, update)
+	if err != nil {
+		return err
+	}
+	return nil
 }

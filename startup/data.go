@@ -6,6 +6,21 @@ import (
 	"time"
 )
 
+//var reservationRequests = []*domain.ReservationRequest{
+//	{
+//		Id:                primitive.NewObjectID(),
+//		AccommodationId:   getObjectId("666f1aeda228dd576197b7a8"),
+//		AccommodationName: "sadsad",
+//		HostId:            "3f92c83e-966d-41e6-8bb5-c076737d89ee",
+//		UserId:            "f3c0120b-39f3-45cf-a771-e062c6932ce2",
+//		Start:             time.Date(2022, time.September, 10, 15, 0, 0, 0, time.UTC),
+//		End:               time.Date(2022, time.September, 17, 12, 0, 0, 0, time.UTC),
+//		NumberOfGuests:    6,
+//		PriceTotal:        1200.00,
+//		Status:            2,
+//	},
+//}
+
 var unavailabilities = []*domain.Unavailability{
 	{
 		Id:                getObjectId("1643a56c9dea1760db469b7b"),
