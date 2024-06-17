@@ -12,6 +12,15 @@ service BookingService{
   rpc CheckDeleteClient(CheckDeleteClientRequest) returns(CheckDeleteClientResponse) {}
   rpc CheckGuestHasReservationForHost(CheckGuestHasReservationForHostRequest) returns(CheckGuestHasReservationForHostResponse) {}
   rpc CheckGuestHasReservationForAccommodation(CheckGuestHasReservationForAccommodationRequest) returns(CheckGuestHasReservationForAccommodationResponse) {}
+  rpc CheckAccommodationHasReservation(CheckAccommodationHasReservationRequest) returns(CheckAccommodationHasReservationResponse) {}
+}
+
+message CheckAccommodationHasReservationRequest{
+  string accommodationId = 1;
+}
+
+message CheckAccommodationHasReservationResponse{
+  bool success = 1;
 }
 
 message CheckGuestHasReservationForHostRequest{

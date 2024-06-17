@@ -18,5 +18,7 @@ type ReservationRequestStore interface {
 	GetByClientIdAndTimeAndSearch(guestId string, past bool, search string) ([]*ReservationRequest, error)
 	DeleteByHost(hostId string) error
 	GetByClientIdAndHostId(reviewerId string, hostId string) ([]*ReservationRequest, error)
+	GetPastAcceptedReservationRequestByClientIdAndHostId(reviewerId string, hostId string) ([]*ReservationRequest, error)
 	GetByClientIdAndAccommodationId(reviewerId string, accommodationId primitive.ObjectID) ([]*ReservationRequest, error)
+	DeleteByAccommodation(accommodationId primitive.ObjectID) error
 }

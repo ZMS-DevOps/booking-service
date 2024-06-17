@@ -103,6 +103,15 @@ func (handler *BookingHandler) CheckGuestHasReservationForAccommodation(ctx cont
 	return &pb.CheckGuestHasReservationForAccommodationResponse{HasReservation: hasReservation}, nil
 }
 
+func (handler *BookingHandler) CheckAccommodationHasReservation(ctx context.Context, request *pb.CheckAccommodationHasReservationRequest) (*pb.CheckAccommodationHasReservationResponse, error) {
+	accommodationId, err := primitive.ObjectIDFromHex(request.AccommodationId)
+	if err != nil {
+		return nil, err
+	}
+	canDelete := handler.reservationRequestService.CheckAccommodationHasReservation(accommodationId)
+	return &pb.CheckAccommodationHasReservationResponse{Success: canDelete}, nil
+}
+
 func convertHexToObjectIDs(hexIDs []string) ([]primitive.ObjectID, error) {
 	var objectIDs []primitive.ObjectID
 

@@ -2,7 +2,6 @@ package reservation_request
 
 import (
 	"context"
-	"fmt"
 	"github.com/ZMS-DevOps/booking-service/domain"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -162,25 +161,9 @@ func (store *ReservationRequestMongoDBStore) DeleteByHost(id string) error {
 func (store *ReservationRequestMongoDBStore) CancelOverlappingPendingRequests(reservationRequest *domain.ReservationRequest) error {
 	filter := bson.M{
 		"accommodation_id": reservationRequest.AccommodationId,
-		"status":           "pending",
-		"$or": []bson.M{
-			{
-				"start": bson.M{
-					"$lt": reservationRequest.End,
-				},
-				"end": bson.M{
-					"$gt": reservationRequest.Start,
-				},
-			},
-			{
-				"start": bson.M{
-					"$lt": reservationRequest.End,
-				},
-				"end": bson.M{
-					"$eq": primitive.Null{},
-				},
-			},
-		},
+		"status":           0,
+		"start":            bson.M{"$lt": reservationRequest.End},
+		"end":              bson.M{"$gt": reservationRequest.Start},
 	}
 
 	update := bson.M{
@@ -195,9 +178,9 @@ func (store *ReservationRequestMongoDBStore) CancelOverlappingPendingRequests(re
 	}
 
 	if updateResult.MatchedCount > 0 {
-		fmt.Printf("Matched %v documents and updated %v documents.\n", updateResult.MatchedCount, updateResult.ModifiedCount)
+		log.Printf("Matched %v documents and updated %v documents.\n", updateResult.MatchedCount, updateResult.ModifiedCount)
 	} else {
-		fmt.Println("No documents matched the query.")
+		log.Printf("No documents matched the query.")
 	}
 
 	return nil
@@ -238,16 +221,9 @@ func (store *ReservationRequestMongoDBStore) GetByHostAndTimeAndSearch(hostId st
 
 func (store *ReservationRequestMongoDBStore) searchByString(search string, filter bson.M) {
 	if search != "" {
-		objectId, err := primitive.ObjectIDFromHex(search)
-		idMatch := bson.M{"_id": objectId}
-		if err != nil {
-			idMatch = bson.M{}
-		}
-
 		filter["$or"] = []bson.M{
 			{"accommodation_name": bson.M{"$regex": search, "$options": "i"}},
 			{"status": bson.M{"$regex": search, "$options": "i"}},
-			idMatch,
 		}
 	}
 }
@@ -285,10 +261,14 @@ func (store *ReservationRequestMongoDBStore) GetByClientIdAndHostId(clientId str
 	return decodeReservationRequests(cursor)
 }
 
-func (store *ReservationRequestMongoDBStore) GetByClientIdAndAccommodationId(reviewerId string, accommodationId primitive.ObjectID) ([]*domain.ReservationRequest, error) {
+func (store *ReservationRequestMongoDBStore) GetPastAcceptedReservationRequestByClientIdAndHostId(clientId string, hostId string) ([]*domain.ReservationRequest, error) {
 	filter := bson.M{
-		"user_id":          reviewerId,
-		"accommodation_id": accommodationId,
+		"user_id": clientId,
+		"host_id": hostId,
+		"status":  1,
+		"end": bson.M{
+			"$lt": time.Now(),
+		},
 	}
 
 	cursor, err := store.reservationRequestCollection.Find(context.TODO(), filter)
@@ -296,4 +276,39 @@ func (store *ReservationRequestMongoDBStore) GetByClientIdAndAccommodationId(rev
 		return nil, err
 	}
 	return decodeReservationRequests(cursor)
+}
+
+func (store *ReservationRequestMongoDBStore) GetByClientIdAndAccommodationId(reviewerId string, accommodationId primitive.ObjectID) ([]*domain.ReservationRequest, error) {
+	filter := bson.M{
+		"user_id":          reviewerId,
+		"accommodation_id": accommodationId,
+		"status":           1,
+		"end": bson.M{
+			"$lt": time.Now(),
+		},
+	}
+
+	cursor, err := store.reservationRequestCollection.Find(context.TODO(), filter)
+	if err != nil {
+		return nil, err
+	}
+	return decodeReservationRequests(cursor)
+}
+
+func (store *ReservationRequestMongoDBStore) DeleteByAccommodation(accommodationId primitive.ObjectID) error {
+	filter := bson.M{
+		"status":           0,
+		"accommodation_id": accommodationId,
+	}
+	update := bson.M{
+		"$set": bson.M{
+			"status": domain.DeclinedByHost,
+		},
+	}
+
+	_, err := store.reservationRequestCollection.UpdateMany(context.TODO(), filter, update)
+	if err != nil {
+		return err
+	}
+	return nil
 }

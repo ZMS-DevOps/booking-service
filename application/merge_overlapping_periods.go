@@ -51,14 +51,14 @@ func insertPeriod(newPeriod *domain.UnavailabilityPeriod, periods []domain.Unava
 	return mergeOverlappingPeriods(periods)
 }
 
-func removePeriod(toRemove domain.UnavailabilityPeriod, periods []domain.UnavailabilityPeriod) []domain.UnavailabilityPeriod {
+func removePeriod(toRemove domain.UnavailabilityPeriod, periods []domain.UnavailabilityPeriod, shouldRemainReserved bool) []domain.UnavailabilityPeriod {
 	var result []domain.UnavailabilityPeriod
 
 	for _, period := range periods {
 		if toRemove.Start.After(period.End) || toRemove.End.Before(period.Start) {
 			result = append(result, period)
 		} else {
-			if period.Reason == domain.Reserved {
+			if period.Reason == domain.Reserved && shouldRemainReserved {
 				result = append(result, period)
 			} else {
 				if toRemove.Start.After(period.Start) && toRemove.End.Before(period.End) {

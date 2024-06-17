@@ -88,14 +88,13 @@ func (store *UnavailabilityMongoDBStore) GetUnavailabilityPeriods(id primitive.O
 
 func (store *UnavailabilityMongoDBStore) UpdateUnavailabilityPeriods(unavailabilityId primitive.ObjectID, periods []domain.UnavailabilityPeriod) error {
 	filter := bson.M{"_id": unavailabilityId}
-	update := bson.M{}
 
 	_, err := store.GetUnavailabilityPeriods(unavailabilityId)
 	if err != nil {
 		return err
 	}
 
-	update = bson.M{"$set": bson.M{"unavailability_periods": periods}}
+	update := bson.M{"$set": bson.M{"unavailability_periods": periods}}
 
 	_, err = store.unavailability.UpdateOne(context.TODO(), filter, update)
 	return err
@@ -128,6 +127,13 @@ func (store *UnavailabilityMongoDBStore) GetByAccommodationId(accommodationId pr
 		return nil, err
 	}
 	return &unavailability, nil
+}
+
+func (store *UnavailabilityMongoDBStore) DeleteByAccommodationId(accommodationId primitive.ObjectID) error {
+	filter := bson.M{"accommodation_id": accommodationId}
+	_, err := store.unavailability.DeleteOne(context.TODO(), filter)
+
+	return err
 }
 
 func (store *UnavailabilityMongoDBStore) GetByHostId(hostId string) ([]*domain.Unavailability, error) {

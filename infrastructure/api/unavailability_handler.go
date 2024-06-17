@@ -27,9 +27,8 @@ func NewUnavailabilityHandler(service *application.UnavailabilityService) *Unava
 }
 
 func (handler *UnavailabilityHandler) Init(router *mux.Router) {
-	router.HandleFunc("/booking/health", handler.GetHealthCheck).Methods("GET")
 	router.HandleFunc("/booking/unavailability", handler.GetAll).Methods("GET")
-	router.HandleFunc("/booking/unavailability/{id}", handler.GetByAccommodationId).Methods("GET")
+	router.HandleFunc("/booking/unavailability/accommodation/{id}", handler.GetByAccommodationId).Methods("GET")
 	router.HandleFunc("/booking/unavailability/host/{id}", handler.GetByHostId).Methods("GET")
 	router.HandleFunc("/booking/unavailability/remove", handler.DeletePeriod).Methods("PUT")
 	router.HandleFunc("/booking/unavailability/add", handler.AddPeriod).Methods("PUT")
@@ -70,7 +69,7 @@ func (handler *UnavailabilityHandler) DeletePeriod(w http.ResponseWriter, r *htt
 	}
 
 	removedUnavailabilityPeriod := dto.MapUnavailabilityPeriod(&manageUnavailabilityPeriodDto)
-	if err := handler.service.RemoveUnavailabilityPeriod(manageUnavailabilityPeriodDto.AccommodationId, removedUnavailabilityPeriod); err != nil {
+	if err := handler.service.RemoveUnavailabilityPeriod(manageUnavailabilityPeriodDto.AccommodationId, removedUnavailabilityPeriod, true); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}

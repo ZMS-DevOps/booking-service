@@ -42,6 +42,7 @@ func (service *ReservationRequestService) AddReservationRequest(reservationReque
 
 	if isAutomatic {
 		err = service.ApproveRequest(*requestId)
+		log.Printf("prosao2")
 		service.produceNotification("reservation-request.created", reservationRequest.HostId, reservationRequest.Id.Hex(), "automatic")
 	} else {
 		service.produceNotification("reservation-request.created", reservationRequest.HostId, reservationRequest.Id.Hex(), "")
@@ -80,7 +81,9 @@ func (service *ReservationRequestService) ApproveRequest(id primitive.ObjectID) 
 	if err != nil {
 		return err
 	}
+	log.Printf("stigao ovde")
 	service.produceNotification("host-reviewed-reservation-request", reservationRequest.UserId, reservationRequest.Id.Hex(), "accept-request")
+	log.Printf("prosao")
 	return nil
 }
 
@@ -103,11 +106,7 @@ func (service *ReservationRequestService) DeclineRequest(id primitive.ObjectID) 
 }
 
 func (service *ReservationRequestService) DeleteRequest(id primitive.ObjectID) error {
-	_, err := service.store.Get(id)
-	if err != nil {
-		return err
-	}
-	err = service.store.Delete(id)
+	err := service.store.Delete(id)
 	if err != nil {
 		return err
 	}
@@ -148,13 +147,18 @@ func (service *ReservationRequestService) DeclineReservation(id primitive.Object
 		End:   reservationRequest.End,
 	}
 
-	err = service.unavailabilityService.RemoveUnavailabilityPeriod(reservationRequest.AccommodationId, &unavailabilityPeriod) // todom
+	log.Printf("stigao DeclineReservation")
+	log.Printf("unavailabilityPeriod start %s", unavailabilityPeriod.Start)
+	log.Printf("unavailabilityPeriod end %s", unavailabilityPeriod.End)
+	err = service.unavailabilityService.RemoveUnavailabilityPeriod(reservationRequest.AccommodationId, &unavailabilityPeriod, false)
 	if err != nil {
 		return err
 	}
 
+	log.Printf("stigao do produce")
 	service.produceNotification("reservation.canceled", reservationRequest.HostId, reservationRequest.Id.Hex(), "canceled")
 
+	log.Printf("prosao DeclineReservation")
 	return nil
 }
 
@@ -239,7 +243,7 @@ func (service *ReservationRequestService) produceNotification(topic string, rece
 }
 
 func (service *ReservationRequestService) CheckGuestHasReservationForHost(reviewerId string, hostId string) bool {
-	requests, err := service.store.GetByClientIdAndHostId(reviewerId, hostId)
+	requests, err := service.store.GetPastAcceptedReservationRequestByClientIdAndHostId(reviewerId, hostId)
 	if err != nil {
 		return false
 	}
@@ -252,4 +256,29 @@ func (service *ReservationRequestService) CheckGuestHasReservationForAccommodati
 		return false
 	}
 	return requests != nil && len(requests) > 0
+}
+
+func (service *ReservationRequestService) CheckAccommodationHasReservation(accommodationId primitive.ObjectID) bool {
+	status := domain.Approved
+	reservationRequests, err := service.GetByAccommodationId(accommodationId, &status)
+	if err != nil {
+		return false
+	}
+	for _, reservationRequest := range reservationRequests {
+		if isReservationInFuture(reservationRequest) {
+			return false
+		}
+	}
+
+	for _, reservationRequest := range reservationRequests {
+		if err := service.DeleteRequest(reservationRequest.Id); err != nil {
+			return false
+		}
+	}
+
+	if err := service.unavailabilityService.DeleteByAccommodationId(accommodationId); err != nil {
+		return false
+	}
+
+	return true
 }
