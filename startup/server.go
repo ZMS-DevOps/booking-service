@@ -5,8 +5,10 @@ import (
 	"github.com/ZMS-DevOps/booking-service/infrastructure/persistence/reservation_request"
 	"github.com/ZMS-DevOps/booking-service/infrastructure/persistence/unavailability"
 	booking "github.com/ZMS-DevOps/booking-service/proto"
+	"github.com/afiskon/promtail-client/promtail"
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"github.com/gorilla/mux"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"google.golang.org/grpc"
 	"net"
 
@@ -21,14 +23,18 @@ import (
 )
 
 type Server struct {
-	config *config.Config
-	router *mux.Router
+	config        *config.Config
+	router        *mux.Router
+	traceProvider *sdktrace.TracerProvider
+	loki          promtail.Client
 }
 
-func NewServer(config *config.Config) *Server {
+func NewServer(config *config.Config, traceProvider *sdktrace.TracerProvider, loki promtail.Client) *Server {
 	server := &Server{
-		config: config,
-		router: mux.NewRouter(),
+		config:        config,
+		router:        mux.NewRouter(),
+		traceProvider: traceProvider,
+		loki:          loki,
 	}
 	return server
 }
@@ -93,21 +99,21 @@ func (server *Server) startGrpcServer(bookingHandler *api.BookingHandler) {
 }
 
 func (server *Server) initUnavailabilityService(store domain.UnavailabilityStore, producer *kafka.Producer, reservationRequestStore domain.ReservationRequestStore) *application.UnavailabilityService {
-	return application.NewUnavailabilityService(store, producer, reservationRequestStore)
+	return application.NewUnavailabilityService(store, producer, reservationRequestStore, server.loki)
 }
 
 func (server *Server) initReservationRequestService(store domain.ReservationRequestStore, unavailabilityService *application.UnavailabilityService, producer *kafka.Producer) *application.ReservationRequestService {
-	return application.NewReservationRequestService(store, unavailabilityService, producer)
+	return application.NewReservationRequestService(store, unavailabilityService, producer, server.loki)
 }
 
 func (server *Server) initUnavailabilityHandler(service *application.UnavailabilityService) *api.UnavailabilityHandler {
-	return api.NewUnavailabilityHandler(service)
+	return api.NewUnavailabilityHandler(service, server.traceProvider, server.loki)
 }
 
 func (server *Server) initReservationRequestHandler(service *application.ReservationRequestService) *api.ReservationRequestHandler {
-	return api.NewReservationRequestHandler(service)
+	return api.NewReservationRequestHandler(service, server.traceProvider, server.loki)
 }
 
 func (server *Server) initGrpcHandler(unavailabilityService *application.UnavailabilityService, reservationRequestService *application.ReservationRequestService) *api.BookingHandler {
-	return api.NewBookingHandler(unavailabilityService, reservationRequestService)
+	return api.NewBookingHandler(unavailabilityService, reservationRequestService, server.traceProvider, server.loki)
 }

@@ -5,8 +5,11 @@ import (
 	"errors"
 	"github.com/ZMS-DevOps/booking-service/domain"
 	"github.com/ZMS-DevOps/booking-service/infrastructure/dto"
+	"github.com/ZMS-DevOps/booking-service/util"
+	"github.com/afiskon/promtail-client/promtail"
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.opentelemetry.io/otel/trace"
 	"log"
 	"time"
 )
@@ -17,7 +20,7 @@ type ReservationRequestService struct {
 	producer              *kafka.Producer
 }
 
-func NewReservationRequestService(store domain.ReservationRequestStore, unavailabilityService *UnavailabilityService, producer *kafka.Producer) *ReservationRequestService {
+func NewReservationRequestService(store domain.ReservationRequestStore, unavailabilityService *UnavailabilityService, producer *kafka.Producer, loki promtail.Client) *ReservationRequestService {
 	return &ReservationRequestService{
 		store:                 store,
 		unavailabilityService: *unavailabilityService,
@@ -25,15 +28,16 @@ func NewReservationRequestService(store domain.ReservationRequestStore, unavaila
 	}
 }
 
-func (service *ReservationRequestService) AddReservationRequest(reservationRequest *domain.ReservationRequest) error {
+func (service *ReservationRequestService) AddReservationRequest(reservationRequest *domain.ReservationRequest, span trace.Span, loki promtail.Client) error {
 	reservationRequest.Id = primitive.NewObjectID()
 	reservationRequest.Status = domain.Pending
 
-	isAutomatic, err := service.unavailabilityService.IsAutomatic(reservationRequest.AccommodationId)
+	isAutomatic, err := service.unavailabilityService.IsAutomatic(reservationRequest.AccommodationId, span, loki)
 	if err != nil {
 		return err
 	}
 
+	util.HttpTraceInfo("Adding reservation request...", span, loki, "AddReservationRequest", "")
 	requestId, err := service.store.Insert(reservationRequest)
 
 	if err != nil {
@@ -41,7 +45,7 @@ func (service *ReservationRequestService) AddReservationRequest(reservationReque
 	}
 
 	if isAutomatic {
-		err = service.ApproveRequest(*requestId)
+		err = service.ApproveRequest(*requestId, span, loki)
 		log.Printf("prosao2")
 		service.produceNotification("reservation-request.created", reservationRequest.HostId, reservationRequest.Id.Hex(), "automatic")
 	} else {
@@ -54,15 +58,18 @@ func (service *ReservationRequestService) AddReservationRequest(reservationReque
 	return nil
 }
 
-func (service *ReservationRequestService) GetByAccommodationId(accommodationId primitive.ObjectID, requestType *domain.ReservationRequestStatus) ([]*domain.ReservationRequest, error) {
+func (service *ReservationRequestService) GetByAccommodationId(accommodationId primitive.ObjectID, requestType *domain.ReservationRequestStatus, span trace.Span, loki promtail.Client) ([]*domain.ReservationRequest, error) {
 	if requestType == nil {
+		util.HttpTraceInfo("Fetching reservation requests by accommodation id...", span, loki, "GetByAccommodationId", "")
 		return service.store.GetByAccommodationId(accommodationId)
 	} else {
+		util.HttpTraceInfo("Fetching reservation requests by accomodation id and type...", span, loki, "GetByAccommodationId", "")
 		return service.store.GetByAccommodationIdAndType(accommodationId, *requestType)
 	}
 }
 
-func (service *ReservationRequestService) ApproveRequest(id primitive.ObjectID) error {
+func (service *ReservationRequestService) ApproveRequest(id primitive.ObjectID, span trace.Span, loki promtail.Client) error {
+	util.HttpTraceInfo("Fetching reservation requests by id...", span, loki, "GetByAccommodationId", "")
 	reservationRequest, err := service.store.Get(id)
 	if err != nil {
 		return err
@@ -72,12 +79,14 @@ func (service *ReservationRequestService) ApproveRequest(id primitive.ObjectID) 
 	}
 
 	reservationRequest.Status = domain.Approved
+	util.HttpTraceInfo("Updating reservation requests...", span, loki, "GetByAccommodationId", "")
 	err = service.store.Update(id, reservationRequest)
 	if err != nil {
 		return err
 	}
+	util.HttpTraceInfo("Canceling overlapping pending requests...", span, loki, "GetByAccommodationId", "")
 	err = service.store.CancelOverlappingPendingRequests(reservationRequest)
-	err = service.createUnavailabilityPeriod(reservationRequest)
+	err = service.createUnavailabilityPeriod(reservationRequest, span, loki)
 	if err != nil {
 		return err
 	}
@@ -87,7 +96,8 @@ func (service *ReservationRequestService) ApproveRequest(id primitive.ObjectID) 
 	return nil
 }
 
-func (service *ReservationRequestService) DeclineRequest(id primitive.ObjectID) error {
+func (service *ReservationRequestService) DeclineRequest(id primitive.ObjectID, span trace.Span, loki promtail.Client) error {
+	util.HttpTraceInfo("Fetching reservation requests by id...", span, loki, "DeclineRequest", "")
 	reservationRequest, err := service.store.Get(id)
 	if err != nil {
 		return err
@@ -97,6 +107,7 @@ func (service *ReservationRequestService) DeclineRequest(id primitive.ObjectID) 
 	}
 
 	reservationRequest.Status = domain.DeclinedByHost
+	util.HttpTraceInfo("Updating reservation requests...", span, loki, "DeclineRequest", "")
 	err = service.store.Update(id, reservationRequest)
 	if err != nil {
 		return err
@@ -105,7 +116,8 @@ func (service *ReservationRequestService) DeclineRequest(id primitive.ObjectID) 
 	return nil
 }
 
-func (service *ReservationRequestService) DeleteRequest(id primitive.ObjectID) error {
+func (service *ReservationRequestService) DeleteRequest(id primitive.ObjectID, span trace.Span, loki promtail.Client) error {
+	util.HttpTraceInfo("Deleting reservation requests...", span, loki, "DeleteRequest", "")
 	err := service.store.Delete(id)
 	if err != nil {
 		return err
@@ -113,17 +125,18 @@ func (service *ReservationRequestService) DeleteRequest(id primitive.ObjectID) e
 	return nil
 }
 
-func (service *ReservationRequestService) createUnavailabilityPeriod(reservationRequest *domain.ReservationRequest) error {
+func (service *ReservationRequestService) createUnavailabilityPeriod(reservationRequest *domain.ReservationRequest, span trace.Span, loki promtail.Client) error {
 	unavailabilityPeriod := domain.UnavailabilityPeriod{
 		Start:  reservationRequest.Start,
 		End:    reservationRequest.End,
 		Reason: domain.Reserved,
 	}
-	err := service.unavailabilityService.AddUnavailabilityPeriod(reservationRequest.AccommodationId, &unavailabilityPeriod)
+	err := service.unavailabilityService.AddUnavailabilityPeriod(reservationRequest.AccommodationId, &unavailabilityPeriod, span, loki)
 	return err
 }
 
-func (service *ReservationRequestService) DeclineReservation(id primitive.ObjectID) error {
+func (service *ReservationRequestService) DeclineReservation(id primitive.ObjectID, span trace.Span, loki promtail.Client) error {
+	util.HttpTraceInfo("Fetching reservation requests by id...", span, loki, "DeclineReservation", "")
 	reservationRequest, err := service.store.Get(id)
 	if err != nil {
 		return err
@@ -137,6 +150,7 @@ func (service *ReservationRequestService) DeclineReservation(id primitive.Object
 	}
 
 	reservationRequest.Status = domain.DeclinedByUser
+	util.HttpTraceInfo("Updating reservation requests...", span, loki, "DeclineReservation", "")
 	err = service.store.Update(id, reservationRequest)
 	if err != nil {
 		return err
@@ -150,7 +164,7 @@ func (service *ReservationRequestService) DeclineReservation(id primitive.Object
 	log.Printf("stigao DeclineReservation")
 	log.Printf("unavailabilityPeriod start %s", unavailabilityPeriod.Start)
 	log.Printf("unavailabilityPeriod end %s", unavailabilityPeriod.End)
-	err = service.unavailabilityService.RemoveUnavailabilityPeriod(reservationRequest.AccommodationId, &unavailabilityPeriod, false)
+	err = service.unavailabilityService.RemoveUnavailabilityPeriod(reservationRequest.AccommodationId, &unavailabilityPeriod, false, span, loki)
 	if err != nil {
 		return err
 	}
@@ -162,7 +176,8 @@ func (service *ReservationRequestService) DeclineReservation(id primitive.Object
 	return nil
 }
 
-func (service *ReservationRequestService) DeleteClient(clientId string) bool {
+func (service *ReservationRequestService) DeleteClient(clientId string, span trace.Span, loki promtail.Client) bool {
+	util.HttpTraceInfo("Fetching reservation requests by client id...", span, loki, "DeleteClient", "")
 	reservationRequests, err := service.store.GetByClientId(clientId)
 	if err != nil {
 		return false
@@ -173,6 +188,7 @@ func (service *ReservationRequestService) DeleteClient(clientId string) bool {
 		}
 	}
 	for _, reservationRequest := range reservationRequests {
+		util.HttpTraceInfo("Deleting reservation requests by id...", span, loki, "DeleteClient", "")
 		err = service.store.Delete(reservationRequest.Id)
 		if err != nil {
 			return false
@@ -181,16 +197,19 @@ func (service *ReservationRequestService) DeleteClient(clientId string) bool {
 	return true
 }
 
-func (service *ReservationRequestService) GetByClientId(clientId string, status *domain.ReservationRequestStatus) ([]*domain.ReservationRequest, error) {
+func (service *ReservationRequestService) GetByClientId(clientId string, status *domain.ReservationRequestStatus, span trace.Span, loki promtail.Client) ([]*domain.ReservationRequest, error) {
 	if status != nil {
+		util.HttpTraceInfo("Fetching reservation requests by client id and status...", span, loki, "GetByClientId", "")
 		return service.store.GetByClientIdAndStatus(clientId, *status)
 	} else {
+		util.HttpTraceInfo("Fetching reservation requests by client id...", span, loki, "GetByClientId", "")
 		return service.store.GetByClientId(clientId)
 	}
 
 }
 
-func (service *ReservationRequestService) GetNumberOfCanceled(clientId string) int {
+func (service *ReservationRequestService) GetNumberOfCanceled(clientId string, span trace.Span, loki promtail.Client) int {
+	util.HttpTraceInfo("Fetching accommodation by client id and status...", span, loki, "GetNumberOfCanceled", "")
 	declinedRequests, err := service.store.GetByClientIdAndStatus(clientId, domain.DeclinedByUser)
 	if err != nil {
 		return 0
@@ -198,13 +217,15 @@ func (service *ReservationRequestService) GetNumberOfCanceled(clientId string) i
 	return len(declinedRequests)
 }
 
-func (service *ReservationRequestService) GetFilteredRequests(userId string, userType string, past bool, search string) ([]*domain.ReservationRequest, error) {
+func (service *ReservationRequestService) GetFilteredRequests(userId string, userType string, past bool, search string, span trace.Span, loki promtail.Client) ([]*domain.ReservationRequest, error) {
 	var requests []*domain.ReservationRequest
 	var err error
 
 	if userType == "host" {
+		util.HttpTraceInfo("Fetching reservation requests by host id and time...", span, loki, "GetFilteredRequests", "")
 		requests, err = service.store.GetByHostAndTimeAndSearch(userId, past, search)
 	} else {
+		util.HttpTraceInfo("Fetching reservation requests by client id and time...", span, loki, "GetFilteredRequests", "")
 		requests, err = service.store.GetByClientIdAndTimeAndSearch(userId, past, search)
 	}
 
@@ -242,7 +263,8 @@ func (service *ReservationRequestService) produceNotification(topic string, rece
 	service.producer.Flush(4 * 1000)
 }
 
-func (service *ReservationRequestService) CheckGuestHasReservationForHost(reviewerId string, hostId string) bool {
+func (service *ReservationRequestService) CheckGuestHasReservationForHost(reviewerId string, hostId string, span trace.Span, loki promtail.Client) bool {
+	util.HttpTraceInfo("Fetching reservation requests by host id and accommodation id...", span, loki, "CheckGuestHasReservationForHost", "")
 	requests, err := service.store.GetPastAcceptedReservationRequestByClientIdAndHostId(reviewerId, hostId)
 	if err != nil {
 		return false
@@ -250,7 +272,8 @@ func (service *ReservationRequestService) CheckGuestHasReservationForHost(review
 	return requests != nil && len(requests) > 0
 }
 
-func (service *ReservationRequestService) CheckGuestHasReservationForAccommodation(reviewerId string, accommodationId primitive.ObjectID) bool {
+func (service *ReservationRequestService) CheckGuestHasReservationForAccommodation(reviewerId string, accommodationId primitive.ObjectID, span trace.Span, loki promtail.Client) bool {
+	util.HttpTraceInfo("Fetching reservation requests by client id and accommodation id...", span, loki, "CheckGuestHasReservationForAccommodation", "")
 	requests, err := service.store.GetByClientIdAndAccommodationId(reviewerId, accommodationId)
 	if err != nil {
 		return false
@@ -258,9 +281,9 @@ func (service *ReservationRequestService) CheckGuestHasReservationForAccommodati
 	return requests != nil && len(requests) > 0
 }
 
-func (service *ReservationRequestService) CheckAccommodationHasReservation(accommodationId primitive.ObjectID) bool {
+func (service *ReservationRequestService) CheckAccommodationHasReservation(accommodationId primitive.ObjectID, span trace.Span, loki promtail.Client) bool {
 	status := domain.Approved
-	reservationRequests, err := service.GetByAccommodationId(accommodationId, &status)
+	reservationRequests, err := service.GetByAccommodationId(accommodationId, &status, span, loki)
 	if err != nil {
 		return false
 	}
@@ -271,12 +294,12 @@ func (service *ReservationRequestService) CheckAccommodationHasReservation(accom
 	}
 
 	for _, reservationRequest := range reservationRequests {
-		if err := service.DeleteRequest(reservationRequest.Id); err != nil {
+		if err := service.DeleteRequest(reservationRequest.Id, span, loki); err != nil {
 			return false
 		}
 	}
 
-	if err := service.unavailabilityService.DeleteByAccommodationId(accommodationId); err != nil {
+	if err := service.unavailabilityService.DeleteByAccommodationId(accommodationId, span, loki); err != nil {
 		return false
 	}
 
