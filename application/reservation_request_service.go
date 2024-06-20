@@ -18,6 +18,7 @@ type ReservationRequestService struct {
 	store                 domain.ReservationRequestStore
 	unavailabilityService UnavailabilityService
 	producer              *kafka.Producer
+	loki                  promtail.Client
 }
 
 func NewReservationRequestService(store domain.ReservationRequestStore, unavailabilityService *UnavailabilityService, producer *kafka.Producer, loki promtail.Client) *ReservationRequestService {
@@ -25,6 +26,7 @@ func NewReservationRequestService(store domain.ReservationRequestStore, unavaila
 		store:                 store,
 		unavailabilityService: *unavailabilityService,
 		producer:              producer,
+		loki:                  loki,
 	}
 }
 
